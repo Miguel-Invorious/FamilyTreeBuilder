@@ -1,0 +1,33 @@
+.photo-container {
+  .picture {
+    border-radius: 50%;
+    border: 2px solid #000;
+    height: 50px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    cursor: pointer;
+    &:hover {
+      border: 2px solid #ff6fb5;
+    }
+  }
+  input[type="file"] {
+    display: none;
+  }
+}
+.cropper-container {
+  position: relative;
+  width: 60vw;
+  height: 60vh;
+  left: 50%;
+  transform: translate(-50%);
+}
+.photo-modal {
+  height: 60vh;
+  width: 60vw;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  .MuiPaper-root{
+      overflow-x: hidden;
+  }
+}

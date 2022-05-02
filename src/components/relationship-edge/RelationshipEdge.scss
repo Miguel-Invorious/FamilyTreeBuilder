@@ -1,0 +1,13 @@
+.edge-button {
+  .button {
+    display: none;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 8%;
+    background-color: #ff6fb5;
+    cursor: pointer;
+  }
+  &:hover .button {
+    display: block;
+  }
+}

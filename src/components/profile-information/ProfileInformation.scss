@@ -1,0 +1,54 @@
+.profile-card {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 15px;
+  position: relative;
+  
+  .information {
+    width: 100%;
+    padding: 5px;
+    margin: 0 10px;
+    .firstname {
+      margin: 0;
+      font-weight: bold;
+    }
+    .birthdate {
+      margin: 8px 0;
+    }
+    &:hover {
+      border: 2px solid #ff6fb5;
+      cursor: pointer;
+    }
+  }
+}
+.information form {
+  width: 100%;
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  label {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    align-items: center;
+    margin-bottom: 8px;
+    width: 100%;
+    span {
+      text-align: left;
+    }
+    input {
+      text-align: center;
+      font-size: 9px;
+      margin-left: 8px;
+    }
+  }
+  .save-button {
+    align-self: center;
+    font-size: 9px;
+    padding: 5px;
+  }
+}
