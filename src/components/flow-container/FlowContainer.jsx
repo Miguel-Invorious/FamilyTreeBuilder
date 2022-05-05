@@ -1,29 +1,24 @@
 import ReactFlow, { MiniMap, Controls, Background } from "react-flow-renderer";
-import ProfileCard from "../profile-card/ProfileCard";
+import { useSelector } from "react-redux";
+import { nodeTypes, edgeTypes } from "../../utils";
 
-import RelationshipEdge from "../relationship-edge/RelationshipEdge";
-import { useFamilyTree } from "../../utils";
-const nodeTypes = {
-  profileNode: ProfileCard,
-};
-const edgeTypes = {
-  relationEdge: RelationshipEdge,
-};
 const FlowContainer = () => {
-  const [nodes, edges] = useFamilyTree();
-
+  const nodes = useSelector((state) => state.flow.nodes);
+  const edges = useSelector((state) => state.flow.edges);
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      fitView
-    >
-      <MiniMap />
-      <Controls />
-      <Background color="#aaa" gap={16} />
-    </ReactFlow>
+    <div className="App">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+      >
+        <MiniMap />
+        <Controls />
+        <Background color="#aaa" gap={16} />
+      </ReactFlow>
+    </div>
   );
 };
 

@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Handle } from "react-flow-renderer";
 import PhotoSelector from "../photo-selector/PhotoSelector";
-import DefaultProfilePhoto from "../../assets/profile-image.jpg";
 import "./ProfileInformation.scss";
 
-const ProfileInformation = ({ nodeData, closeMenu, handles }) => {
+const ProfileInformation = ({ closeMenu, handles }) => {
   const formRef = useRef(null);
   const [formMenu, setFormMenu] = useState(false);
   const [isDeceased, setDeceased] = useState(false);
@@ -18,7 +17,9 @@ const ProfileInformation = ({ nodeData, closeMenu, handles }) => {
   const { register, handleSubmit } = useForm();
 
   const onSubmit = (data) => {
-    closeMenu();
+    if (closeMenu) {
+      closeMenu();
+    }
     setFormMenu(false);
     setInformation(data);
   };
@@ -26,32 +27,49 @@ const ProfileInformation = ({ nodeData, closeMenu, handles }) => {
     const handleClickOutside = (event) => {
       if (formRef.current && !formRef.current.contains(event.target)) {
         setFormMenu(false);
-        closeMenu();
+        if (closeMenu) {
+          closeMenu();
+        }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [formRef]);
+  }, [formRef, closeMenu]);
   return (
     <div className="information-container">
-      {nodeData.isSibling && (
-        <Handle type="source" className="top-handle" position="top" id="top" />
-      )}
-      {nodeData.isPartner && (
-        <Handle type="target" position="right" id="right" />
-      )}
-      {(handles.partner || nodeData.hasPartner || nodeData.isParent) && (
-        <Handle type="source" position="left" id="left" />
-      )}
-      {(handles.sibling || handles.parent || nodeData.isChild) && (
-        <Handle type="target" className="top-handle" position="top" id="top" />
-      )}
+      <Handle
+        type="target"
+        position={handles.female ? "left" : "right"}
+        id="partner"
+        style={{
+          visibility: handles.isPartner ? "visible" : "hidden",
+        }}
+      />
+      <Handle
+        type="target"
+        className="top-handle"
+        position="top"
+        id="top"
+        style={{
+          visibility: handles.parents ? "visible" : "hidden",
+        }}
+      />
+      <Handle
+        type="source"
+        position={handles.female ? "left" : "right"}
+        id="relatives"
+        style={{
+          visibility:
+            handles.partner || handles.children || handles.expartners > 0
+              ? "visible"
+              : "hidden",
+        }}
+      />
 
       <div className="profile-card">
-        <PhotoSelector closeMenu={closeMenu}/>
-        {/* <img className="picture" src={DefaultProfilePhoto} alt="profile" /> */}
+        <PhotoSelector closeMenu={closeMenu} />
         <div className="information">
           {formMenu ? (
             <form onSubmit={handleSubmit(onSubmit)} ref={formRef}>

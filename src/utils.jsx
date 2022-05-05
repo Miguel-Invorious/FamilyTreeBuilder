@@ -1,9 +1,163 @@
-import { height } from "@mui/system";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { addNode, addEdge, updateFlow } from "./redux/flowSlice";
 import { useEdgesState, useNodesState } from "react-flow-renderer";
-
+import ProfileCard from "./components/profile-card/ProfileCard";
+import RelationCard from "./components/relation-card/RelationCard";
+import RelationshipEdge from "./components/relationship-edge/RelationshipEdge";
+import CustomEdge from "./components/CustomEdge";
+import { bool, number } from "prop-types";
+export const initialPosition = { x: 0, y: 0 };
+export const heightGap = 300;
+export const widthGap = 300;
+export const useAddParent = (
+  childId = "",
+  childPosition = { x: number, y: number }
+) => {
+  const dispatch = useDispatch();
+  let nodes = [];
+  let edges = [];
+  for (let i = 0; i < 2; i++) {
+    let position = {
+      x: childPosition.x + 0.5 * (i % 2) === 0 ? widthGap : -widthGap,
+      y: childPosition.y - heightGap,
+    };
+    nodes.push({
+      id: `${childId}-parent-${i}`,
+      type: i % 2 === 0 ? "profileNode" : "relationNode",
+      position,
+      data: {
+        position,
+        female: i % 2 === 0,
+        isParent: i % 2 === 0,
+        isPartner: !(i % 2) === 0,
+        partner: i % 2 === 0,
+        children: 0,
+      },
+    });
+  }
+  edges.push(
+    {
+      id: `e-${childId}-parent`,
+      type: "customEdge",
+      source: `${childId}-parent-0`,
+      target: `${childId}`,
+      targetHandle: "top",
+    },
+    {
+      id: `e-${childId}-parent-relation`,
+      type: "relationEdge",
+      source: `${childId}-parent-0`,
+      target: `${childId}-parent-1`,
+    }
+  );
+  return () => {
+    dispatch(updateFlow({ nodes, edges }));
+  };
+};
+export const useAddPartner = (
+  partnerId = "",
+  partnerPosition = { x: number, y: number },
+  isPartnerFemale = bool
+) => {
+  const dispatch = useDispatch();
+  return () => {
+    dispatch(
+      addNode([
+        {
+          id: `${partnerId}-partner`,
+          type: "relationNode",
+          position: {
+            x: isPartnerFemale
+              ? partnerPosition.x - widthGap
+              : partnerPosition.x + widthGap,
+            y: partnerPosition.y,
+          },
+          data: { isPartner: true, female: !isPartnerFemale },
+        },
+      ])
+    );
+    dispatch(
+      addEdge([
+        {
+          id: `e-${partnerId}-partner`,
+          type: "relationEdge",
+          source: `${partnerId}`,
+          target: `${partnerId}-partner`,
+        },
+      ])
+    );
+  };
+};
+export const useAddSibling = (
+  siblingId = "",
+  siblings = number,
+  siblingPosition = { x: number, y: number }
+) => {
+  const dispatch = useDispatch();
+  return () => {
+    dispatch(
+      addNode([
+        {
+          id: `${siblingId}-s-${siblings}`,
+          type: "profileNode",
+          position: {
+            x: siblingPosition.x + widthGap * siblings,
+            y: siblingPosition.y,
+          },
+          data: {
+            parents: true,
+            partner: false,
+            expartners: 0,
+            children: 0,
+            female: false,
+            isSibling: true,
+            position: {
+              x: siblingPosition.x + widthGap * siblings,
+              y: siblingPosition.y,
+            },
+          },
+        },
+      ])
+    );
+    dispatch(
+      addEdge([
+        {
+          id: `e-${siblingId}-s-${siblings}-partner`,
+          type: "customEdge",
+          source: `${siblingId}-parent-0`,
+          target: `${siblingId}-s-${siblings}`,
+          targetHandle: "top",
+        },
+      ])
+    );
+  };
+};
+export const nodeTypes = {
+  profileNode: ProfileCard,
+  relationNode: RelationCard,
+};
+export const edgeTypes = {
+  relationEdge: RelationshipEdge,
+  customEdge: CustomEdge,
+};
 export const useFamilyTree = () => {
   const initialPosition = { x: 0, y: 0 };
+  const initalNodes = [
+    {
+      id: "0",
+      type: "profileNode",
+      position: initialPosition,
+      parentNode: "0-pos",
+      extent: "parent",
+      data: {
+        position: initialPosition,
+        hasParents: false,
+        sibling: 0,
+        children: 0,
+      },
+    },
+  ];
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [mokeNodes, setMokeNodes] = useState([]);
@@ -184,8 +338,8 @@ export const useFamilyTree = () => {
           },
         },
       ];
-      return newNodes;
-      //return orderNodes(newNodes, parentPosition, `${id}-child`);
+      //return newNodes;
+      return orderNodes(newNodes, parentPosition, `${id}-child`);
     });
     setEdges((currentEdges) => [
       {
@@ -225,24 +379,6 @@ export const useFamilyTree = () => {
       } else return node;
     });
   };
-  useEffect(() => {
-    setNodes([
-      {
-        id: "0",
-        type: "profileNode",
-        position: initialPosition,
-        data: {
-          addSibling,
-          addCurrentPartner,
-          deleteNode,
-          addParents,
-          position: initialPosition,
-          hasParents: false,
-          sibling: 0,
-          children: 0,
-        },
-      },
-    ]);
-  }, []);
+
   return [nodes, edges, onNodesChange, onEdgesChange];
 };

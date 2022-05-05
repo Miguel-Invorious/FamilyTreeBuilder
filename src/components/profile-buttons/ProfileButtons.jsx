@@ -2,10 +2,13 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faX } from "@fortawesome/free-solid-svg-icons";
 const ProfileButtons = ({
-  handleAddParent,
-  handleAddPartner,
-  handleAddSibling,
-  handleDeleteNode,
+  addParent,
+  hasParents,
+  addPartner,
+  hasPartner,
+  addSibling,
+  isSibling,
+  deleteNode,
   viewButtons,
   viewAddMenu,
   toggleAddMenu,
@@ -14,13 +17,15 @@ const ProfileButtons = ({
     <>
       {viewButtons && (
         <>
-          <div className="button top" onClick={handleAddParent}>
-            <FontAwesomeIcon icon={faPlus} />
-          </div>
+          {!hasParents && (
+            <div className="button top" onClick={addParent}>
+              <FontAwesomeIcon icon={faPlus} />
+            </div>
+          )}
           {viewAddMenu ? (
             <div className="add-menu rigth">
-              <button onClick={handleAddSibling}>Add sibling</button>
-              <button onClick={handleAddPartner}>Add current Partner</button>
+              {!isSibling && <button onClick={addSibling}>Add sibling</button>}
+              {!hasPartner && <button onClick={addPartner}>Add partner</button>}
               <button>Add ex partner</button>
             </div>
           ) : (
@@ -29,7 +34,7 @@ const ProfileButtons = ({
             </div>
           )}
 
-          <div className="button bottom" onClick={handleDeleteNode}>
+          <div className="button bottom" onClick={deleteNode}>
             <FontAwesomeIcon icon={faX} />
           </div>
         </>

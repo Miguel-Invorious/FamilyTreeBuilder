@@ -1,37 +1,35 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
 import ProfileInformation from "../profile-information/ProfileInformation";
 import ProfileButtons from "../profile-buttons/ProfileButtons";
+import { useAddParent, useAddPartner, useAddSibling } from "../../utils";
 import "./ProfileCard.scss";
 
 const ProfileCard = ({ data, id }) => {
   const [viewButtons, toggleButtons] = useState(false);
   const [viewAddMenu, toggleAddMenu] = useState(false);
-  const [handles, setHandles] = useState({
-    parent: false,
-    sibling: false,
-    partner: false,
-  });
-  const handleAddSibling = () => {
-    if (!handles.parent && !data.hasParents) {
-      handleAddParent();
-      data.hasParents = true;
+  const [siblingsCount, setSiblingsCount] = useState(1);
+  const [handles, setHandles] = useState(data);
+  const setPartner = useAddPartner(id, handles.position, handles.female);
+  const setParents = useAddParent(id, handles.position);
+  const setSiblings = useAddSibling(id, siblingsCount, handles.position);
+  const addSibling = () => {
+    if (!handles.parents) {
+      addParent();
     }
-    setHandles({ ...handles, sibling: true });
-    data.addSibling(id, data.position);
+    setSiblings();
+    setSiblingsCount(siblingsCount + 1);
   };
-  const handleDeleteNode = () => {
-    data.deleteNode(id);
+  const deleteNode = () => {};
+  const addParent = () => {
+    setHandles({ ...handles, parents: true });
+    setParents();
   };
-  const handleAddParent = () => {
-    setHandles({ ...handles, parent: true });
-    data.addParents(id, data.position);
-  };
-  const handleAddPartner = () => {
+  const addPartner = () => {
     setHandles({ ...handles, partner: true });
-    data.addCurrentPartner(id, data.position);
+    console.log("User is:", handles.female ? "female" : "male");
+    setPartner();
   };
-  const handleMenuClose = () => {
+  const menuClose = () => {
     toggleButtons(false);
     toggleAddMenu(false);
   };
@@ -39,18 +37,17 @@ const ProfileCard = ({ data, id }) => {
     <div
       className="container"
       onMouseEnter={() => toggleButtons(true)}
-      onMouseLeave={handleMenuClose}
+      onMouseLeave={menuClose}
     >
-      <ProfileInformation
-        nodeData={data}
-        closeMenu={handleMenuClose}
-        handles={handles}
-      />
+      <ProfileInformation closeMenu={menuClose} handles={handles} />
       <ProfileButtons
-        handleAddParent={handleAddParent}
-        handleAddSibling={handleAddSibling}
-        handleDeleteNode={handleDeleteNode}
-        handleAddPartner={handleAddPartner}
+        addParent={addParent}
+        hasParents={handles.parents}
+        addSibling={addSibling}
+        isSibling={handles.isSibling}
+        deleteNode={deleteNode}
+        addPartner={addPartner}
+        hasPartner={handles.partner}
         viewButtons={viewButtons}
         viewAddMenu={viewAddMenu}
         toggleAddMenu={toggleAddMenu}
@@ -58,8 +55,5 @@ const ProfileCard = ({ data, id }) => {
     </div>
   );
 };
-ProfileCard.propTypes = {
-  firstname: PropTypes.string,
-  dateOfBirth: PropTypes.string,
-};
+
 export default ProfileCard;
