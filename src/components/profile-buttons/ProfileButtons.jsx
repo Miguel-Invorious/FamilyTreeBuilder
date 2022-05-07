@@ -6,8 +6,10 @@ const ProfileButtons = ({
   hasParents,
   addPartner,
   hasPartner,
+  hasExPartner,
   addSibling,
   isSibling,
+  addExPartner,
   deleteNode,
   viewButtons,
   viewAddMenu,
@@ -24,9 +26,11 @@ const ProfileButtons = ({
           )}
           {viewAddMenu ? (
             <div className="add-menu rigth">
-              {!isSibling && <button onClick={addSibling}>Add sibling</button>}
+              <button onClick={addSibling}>Add sibling</button>
               {!hasPartner && <button onClick={addPartner}>Add partner</button>}
-              <button>Add ex partner</button>
+              {!hasExPartner && (
+                <button onClick={addExPartner}>Add ex partner</button>
+              )}
             </div>
           ) : (
             <div className="button rigth" onClick={() => toggleAddMenu(true)}>

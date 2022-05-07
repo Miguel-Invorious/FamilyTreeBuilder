@@ -7,7 +7,26 @@
   padding: 25px 15px;
   position: relative;
   .photo-container {
-    display: none; //DELELTE THIS HEHE
+    position: relative;
+    border-radius: 50%;
+    .top {
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, 0);
+    }
+    .left {
+      left: 0;
+      top: 50%;
+      transform: translate(0, -50%);
+    }
+    .right {
+      right: 0;
+      top: 50%;
+      transform: translate(0, -50%);
+    }
+    .react-flow__handle {
+      visibility: hidden;
+    }
   }
   .information {
     width: 100%;
@@ -18,7 +37,6 @@
       font-weight: bold;
     }
     .birthdate {
-      display: none; //DELELTE THIS HEHE
       margin: 8px 0;
     }
     &:hover {

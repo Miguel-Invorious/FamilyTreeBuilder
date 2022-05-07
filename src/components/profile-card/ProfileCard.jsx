@@ -1,33 +1,74 @@
 import React, { useState } from "react";
 import ProfileInformation from "../profile-information/ProfileInformation";
 import ProfileButtons from "../profile-buttons/ProfileButtons";
-import { useAddParent, useAddPartner, useAddSibling } from "../../utils";
+import {
+  addParent,
+  addPartner_,
+  addSibling,
+  addEx,
+  addParentsAndSiblings,
+  useDeleteNode,
+} from "../../utils";
 import "./ProfileCard.scss";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  updateFlow,
+  addValueToMainNode,
+  addPartner,
+  addExPartner,
+  addMainNode,
+  addParentById,
+  addChildrenById,
+  deleteNode,
+} from "../../redux/flowSlice";
 
-const ProfileCard = ({ data, id }) => {
+const ProfileCard = ({ id, data }) => {
+  const dispatch = useDispatch();
   const [viewButtons, toggleButtons] = useState(false);
   const [viewAddMenu, toggleAddMenu] = useState(false);
-  const [siblingsCount, setSiblingsCount] = useState(1);
   const [handles, setHandles] = useState(data);
-  const setPartner = useAddPartner(id, handles.position, handles.female);
-  const setParents = useAddParent(id, handles.position);
-  const setSiblings = useAddSibling(id, siblingsCount, handles.position);
-  const addSibling = () => {
+  const mainNodes = useSelector((state) => state.flow.mainNodesCount);
+  const me = useSelector(
+    (state) => state.flow.nodes.filter((node) => node.id === id)[0]
+  );
+  const handleAddSibling = () => {
     if (!handles.parents) {
-      addParent();
+      const { nodes, edges } = addParentsAndSiblings(
+        id,
+        data.position,
+        mainNodes,
+        me
+      );
+      dispatch(updateFlow({ nodes, edges }));
+      dispatch(addValueToMainNode(2));
+      dispatch(addParentById({ id, parentId: nodes[0] }));
+      setHandles({ ...handles, parents: true });
+    } else {
+      const { nodes, edges } = addSibling(mainNodes, me.data.parentId);
+      dispatch(updateFlow({ nodes, edges }));
+      dispatch(addMainNode());
+      dispatch(
+        addChildrenById({ parentId: me.data.parentId.id, childId: nodes })
+      );
     }
-    setSiblings();
-    setSiblingsCount(siblingsCount + 1);
   };
-  const deleteNode = () => {};
-  const addParent = () => {
+  const handleDeleteNode = () => dispatch(deleteNode(id));
+  const handleAddParent = () => {
+    const { nodes, edges } = addParent(id, data.position, mainNodes, me);
     setHandles({ ...handles, parents: true });
-    setParents();
+    dispatch(updateFlow({ nodes, edges }));
+    dispatch(addParentById({ id, parentId: nodes[0] }));
+    dispatch(addMainNode());
   };
-  const addPartner = () => {
+  const handleAddPartner = () => {
     setHandles({ ...handles, partner: true });
-    console.log("User is:", handles.female ? "female" : "male");
-    setPartner();
+    dispatch(addPartner({ id }));
+    dispatch(updateFlow(addPartner_(id, data.position, data.gender)));
+  };
+  const handleAddExPartner = () => {
+    setHandles({ ...handles, expartner: true });
+    dispatch(updateFlow(addEx(id, data.position, data.gender, data.partner)));
+    dispatch(addExPartner({ id }));
   };
   const menuClose = () => {
     toggleButtons(false);
@@ -39,18 +80,20 @@ const ProfileCard = ({ data, id }) => {
       onMouseEnter={() => toggleButtons(true)}
       onMouseLeave={menuClose}
     >
-      <ProfileInformation closeMenu={menuClose} handles={handles} />
+      <ProfileInformation closeMenu={menuClose} gender={data.gender} id={id} />
       <ProfileButtons
-        addParent={addParent}
+        addParent={handleAddParent}
+        addPartner={handleAddPartner}
+        addExPartner={handleAddExPartner}
+        addSibling={handleAddSibling}
+        deleteNode={handleDeleteNode}
+        toggleAddMenu={toggleAddMenu}
         hasParents={handles.parents}
-        addSibling={addSibling}
-        isSibling={handles.isSibling}
-        deleteNode={deleteNode}
-        addPartner={addPartner}
         hasPartner={handles.partner}
+        hasExPartner={handles.expartner}
+        isSibling={handles.isSibling}
         viewButtons={viewButtons}
         viewAddMenu={viewAddMenu}
-        toggleAddMenu={toggleAddMenu}
       />
     </div>
   );

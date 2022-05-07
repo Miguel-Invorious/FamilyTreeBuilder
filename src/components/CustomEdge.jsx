@@ -1,46 +1,39 @@
-import React, { useState } from "react";
-import { getBezierPath, getSmoothStepPath } from "react-flow-renderer";
-import { heightGap, widthGap } from "../utils";
+import React from "react";
+import { getSmoothStepPath } from "react-flow-renderer";
+import { widthGap, widthOffset, buttonDimension } from "../utils";
 const CustomEdge = ({
   id,
   sourceX,
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   markerEnd,
   data,
 }) => {
-  const [children, setChildren] = useState(1);
-  const centerX = sourceX - 0.5 * widthGap;
-  const centerY = sourceY + 0.5 * heightGap;
-  const sourceToCenter = getSmoothStepPath({
+  const centerX =
+    data === "female"
+      ? sourceX - widthGap / 2 + widthOffset
+      : sourceX + widthGap / 2 - widthOffset;
+
+  const sourceToCenterX = getSmoothStepPath({
     sourceX,
     sourceY,
-    sourcePosition,
     targetX: centerX,
-    targetY: centerY,
-    borderRadius: 0,
+    targetY: sourceY,
   });
-  const centerToTarget = getSmoothStepPath({
+  const centerXtoTarget = getSmoothStepPath({
     sourceX: centerX,
-    sourceY: centerY,
+    sourceY: sourceY,
     targetX,
-    targetY,
-    targetPosition,
+    targetY: targetY,
     borderRadius: 0,
   });
-  const handleClick = () => {
-    setChildren(children + 1);
-    data.addChild(id.replace(/\D/g, ""), { x: sourceX, y: sourceY }, children);
-  };
   return (
     <>
       <path
         id={id}
         className="react-flow__edge-path"
-        d={sourceToCenter + centerToTarget}
+        d={sourceToCenterX + centerXtoTarget}
         markerEnd={markerEnd}
       />
     </>

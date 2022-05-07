@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { getBezierPath, getEdgeCenter } from "react-flow-renderer";
-
+import { useDispatch, useSelector } from "react-redux";
+import {
+  updateFlow,
+  addChildrenById,
+  addExChildrenById,
+  addMainNode,
+} from "../../redux/flowSlice";
+import { addChild, buttonDimension } from "../../utils";
 import "./RelationshipEdge.scss";
 
-const buttonDimension = 30;
 const RelationshipEdge = ({
   id,
   sourceX,
@@ -15,9 +21,7 @@ const RelationshipEdge = ({
   sourcePosition,
   targetPosition,
   markerEnd,
-  data,
 }) => {
-  const [children, setChildren] = useState(1);
   const edgePath = getBezierPath({
     sourceX,
     sourceY,
@@ -32,9 +36,25 @@ const RelationshipEdge = ({
     targetX,
     targetY,
   });
+  const parent = useSelector((state) =>
+    state.flow.nodes.filter((node) => node.id === id.replace(/\D/g, ""))
+  );
+  const mainNodes = useSelector((state) => state.flow.mainNodesCount);
+  const dispatch = useDispatch();
   const handleClick = () => {
-    setChildren(children + 1);
-    data.addChild(id.replace(/\D/g, ""), { x: sourceX, y: sourceY }, children);
+    const { nodes, edges } = addChild(
+      id,
+      { x: sourceX, y: sourceY },
+      parent[0],
+      mainNodes
+    );
+    dispatch(updateFlow({ nodes, edges }));
+    dispatch(addMainNode());
+    id.replace(/^[a-z]-\d-/, "") === "partner"
+      ? dispatch(
+          addChildrenById({ parentId: id.replace(/\D/g, ""), childId: nodes })
+        )
+      : dispatch(addExChildrenById({ parentId: id.replace(/\D/g, ""), nodes }));
   };
   return (
     <>

@@ -1,9 +1,9 @@
 .photo-container {
+  margin-bottom: 15px;
   .picture {
     border-radius: 50%;
     border: 2px solid #000;
     height: 50px;
-    margin-bottom: 15px;
     overflow: hidden;
     cursor: pointer;
     &:hover {
@@ -27,7 +27,7 @@
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%);
-  .MuiPaper-root{
-      overflow-x: hidden;
+  .MuiPaper-root {
+    overflow-x: hidden;
   }
 }

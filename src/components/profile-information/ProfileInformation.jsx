@@ -1,27 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Handle } from "react-flow-renderer";
+import { useDispatch, useSelector } from "react-redux";
+import { setGender } from "../../redux/flowSlice";
 import PhotoSelector from "../photo-selector/PhotoSelector";
 import "./ProfileInformation.scss";
 
-const ProfileInformation = ({ closeMenu, handles }) => {
+const ProfileInformation = ({ closeMenu, gender, id }) => {
   const formRef = useRef(null);
+  const dispatch = useDispatch();
   const [formMenu, setFormMenu] = useState(false);
   const [isDeceased, setDeceased] = useState(false);
   const [information, setInformation] = useState({
     firstname: "firstname",
     birthDate: "Birthdate",
     deceased: false,
+    gender,
   });
-
   const { register, handleSubmit } = useForm();
-
   const onSubmit = (data) => {
     if (closeMenu) {
       closeMenu();
     }
     setFormMenu(false);
     setInformation(data);
+    dispatch(setGender({ id, gender: data.gender }));
   };
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,37 +42,30 @@ const ProfileInformation = ({ closeMenu, handles }) => {
   }, [formRef, closeMenu]);
   return (
     <div className="information-container">
-      <Handle
-        type="target"
-        position={handles.female ? "left" : "right"}
-        id="partner"
-        style={{
-          visibility: handles.isPartner ? "visible" : "hidden",
-        }}
-      />
-      <Handle
-        type="target"
-        className="top-handle"
-        position="top"
-        id="top"
-        style={{
-          visibility: handles.parents ? "visible" : "hidden",
-        }}
-      />
-      <Handle
-        type="source"
-        position={handles.female ? "left" : "right"}
-        id="relatives"
-        style={{
-          visibility:
-            handles.partner || handles.children || handles.expartners > 0
-              ? "visible"
-              : "hidden",
-        }}
-      />
-
       <div className="profile-card">
-        <PhotoSelector closeMenu={closeMenu} />
+        <div className="photo-container">
+          <Handle
+            type="target"
+            position={information.gender === "female" ? "left" : "right"}
+            className={information.gender === "female" ? "left" : "right"}
+            id="partner"
+          />
+          <Handle type="target" className="top" position="top" id="top" />
+          <Handle
+            type="source"
+            position={information.gender === "female" ? "left" : "right"}
+            className={information.gender === "female" ? "left" : "right"}
+            id="relatives"
+          />
+          <Handle
+            type="source"
+            position={information.gender === "female" ? "right" : "left"}
+            className={information.gender === "female" ? "right" : "left"}
+            id="expartner"
+          />
+          <PhotoSelector closeMenu={closeMenu} />
+        </div>
+
         <div className="information">
           {formMenu ? (
             <form onSubmit={handleSubmit(onSubmit)} ref={formRef}>
@@ -91,7 +87,10 @@ const ProfileInformation = ({ closeMenu, handles }) => {
               </label>
               <label>
                 <span>Gender</span>
-                <input type="text" {...register("gender")} />
+                <select {...register("gender")}>
+                  <option value={"female"}>Female</option>
+                  <option value={"male"}>Male</option>
+                </select>
               </label>
               <label>
                 <span>Deceased</span>

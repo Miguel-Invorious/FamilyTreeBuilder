@@ -17,7 +17,7 @@ const PhotoSelector = ({ closeMenu }) => {
   };
   const handleCloseModal = () => setOpen(false);
   return (
-    <div className="photo-container">
+    <>
       {imageSrc ? (
         <>
           <PhotoDialog
@@ -41,7 +41,7 @@ const PhotoSelector = ({ closeMenu }) => {
           <input type="file" onChange={onChange} accept="image/*" />
         </label>
       )}
-    </div>
+    </>
   );
 };
 function readFile(file) {
