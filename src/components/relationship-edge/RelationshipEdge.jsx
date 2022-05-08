@@ -2,14 +2,14 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { getBezierPath, getEdgeCenter } from "react-flow-renderer";
-import { useDispatch, useSelector } from "react-redux";
 import {
-  updateFlow,
-  addChildrenById,
-  addExChildrenById,
-  addMainNode,
-} from "../../redux/flowSlice";
-import { addChild, buttonDimension } from "../../utils";
+  addChild,
+  buttonDimension,
+  nodesAtom,
+  edgesAtom,
+  nodeCountAtom,
+} from "../../utils";
+import { useAtom } from "jotai";
 import "./RelationshipEdge.scss";
 
 const RelationshipEdge = ({
@@ -36,25 +36,98 @@ const RelationshipEdge = ({
     targetX,
     targetY,
   });
-  const parent = useSelector((state) =>
-    state.flow.nodes.filter((node) => node.id === id.replace(/\D/g, ""))
-  );
-  const mainNodes = useSelector((state) => state.flow.mainNodesCount);
-  const dispatch = useDispatch();
+
+  const [nodes, setNodes] = useAtom(nodesAtom);
+  const [edges, setEdges] = useAtom(edgesAtom);
+  const [nodeCount, setNodeCount] = useAtom(nodeCountAtom);
+
   const handleClick = () => {
-    const { nodes, edges } = addChild(
-      id,
-      { x: sourceX, y: sourceY },
-      parent[0],
-      mainNodes
-    );
-    dispatch(updateFlow({ nodes, edges }));
-    dispatch(addMainNode());
+    const me = nodes.find((node) => node.id === id.replace(/\D/g, ""));
+    const [newNodes, newEdges] = addChild(id, me, nodeCount);
     id.replace(/^[a-z]-\d-/, "") === "partner"
-      ? dispatch(
-          addChildrenById({ parentId: id.replace(/\D/g, ""), childId: nodes })
-        )
-      : dispatch(addExChildrenById({ parentId: id.replace(/\D/g, ""), nodes }));
+      ? setNodes([
+          ...nodes
+            .map((node) =>
+              node.id === id.replace(/\D/g, "")
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      children: node.data.children + 1,
+                      childNodes: [...node.data.childNodes, ...newNodes],
+                    },
+                  }
+                : node
+            )
+            .map((node) => {
+              if (node.data.parentNode) {
+                return node.data.parentNode.id === id.replace(/\D/g, "")
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        parentNode: {
+                          ...node.data.parentNode,
+                          data: {
+                            ...node.data.parentNode.data,
+                            children: node.data.parentNode.data.children + 1,
+                            childNodes: [
+                              ...node.data.parentNode.data.childNodes,
+                              ...newNodes,
+                            ],
+                          },
+                        },
+                      },
+                    }
+                  : node;
+              }
+              return node;
+            }),
+          ...newNodes,
+        ])
+      : setNodes([
+          ...nodes
+            .map((node) =>
+              node.id === id.replace(/\D/g, "")
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      exchildren: node.data.exchildren + 1,
+                      exchildNodes: [...node.data.exchildNodes, ...newNodes],
+                    },
+                  }
+                : node
+            )
+            .map((node) => {
+              if (node.data.parentNode) {
+                return node.data.parentNode.id === id.replace(/\D/g, "")
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        parentNode: {
+                          ...node.data.parentNode,
+                          data: {
+                            ...node.data.parentNode.data,
+                            exchildren: node.data.parentNode.data.exchildren + 1,
+                            exchildNodes: [
+                              ...node.data.parentNode.data.exchildNodes,
+                              ...newNodes,
+                            ],
+                          },
+                        },
+                      },
+                    }
+                  : node;
+              }
+              return node;
+            }),
+          ...newNodes,
+        ]);
+
+    setEdges([...edges, ...newEdges]);
+    setNodeCount(nodeCount + 1);
   };
   return (
     <>

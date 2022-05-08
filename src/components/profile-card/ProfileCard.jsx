@@ -1,79 +1,381 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ProfileInformation from "../profile-information/ProfileInformation";
 import ProfileButtons from "../profile-buttons/ProfileButtons";
 import {
-  addParent,
-  addPartner_,
+  nodesAtom,
+  edgesAtom,
+  nodeCountAtom,
+  parentAtom,
+  addFamily,
   addSibling,
+  addParents,
+  addPartner,
   addEx,
-  addParentsAndSiblings,
-  useDeleteNode,
+  deleteNode,
+  deleteEdge,
 } from "../../utils";
 import "./ProfileCard.scss";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  updateFlow,
-  addValueToMainNode,
-  addPartner,
-  addExPartner,
-  addMainNode,
-  addParentById,
-  addChildrenById,
-  deleteNode,
-} from "../../redux/flowSlice";
 
+import { useAtom } from "jotai";
 const ProfileCard = ({ id, data }) => {
-  const dispatch = useDispatch();
+  const [nodes, setNodes] = useAtom(nodesAtom);
+  const [edges, setEdges] = useAtom(edgesAtom);
+  const [parent, setParent] = useAtom(parentAtom);
+  const [nodeCount, setNodeCount] = useAtom(nodeCountAtom);
   const [viewButtons, toggleButtons] = useState(false);
   const [viewAddMenu, toggleAddMenu] = useState(false);
-  const [handles, setHandles] = useState(data);
-  const mainNodes = useSelector((state) => state.flow.mainNodesCount);
-  const me = useSelector(
-    (state) => state.flow.nodes.filter((node) => node.id === id)[0]
-  );
   const handleAddSibling = () => {
-    if (!handles.parents) {
-      const { nodes, edges } = addParentsAndSiblings(
-        id,
-        data.position,
-        mainNodes,
-        me
-      );
-      dispatch(updateFlow({ nodes, edges }));
-      dispatch(addValueToMainNode(2));
-      dispatch(addParentById({ id, parentId: nodes[0] }));
-      setHandles({ ...handles, parents: true });
+    if (!data.parent) {
+      const me = nodes.find((node) => node.id === id);
+      const [newNodes, newEdges] = addFamily(me, id, nodeCount);
+      setNodes([
+        ...nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: { ...node.data, parent: true, parentNode: newNodes[0] },
+              }
+            : node
+        ),
+        ...newNodes,
+      ]);
+      setEdges([...edges, ...newEdges]);
+      setNodeCount(nodeCount + 2);
+      setParent(newNodes[0].id);
     } else {
-      const { nodes, edges } = addSibling(mainNodes, me.data.parentId);
-      dispatch(updateFlow({ nodes, edges }));
-      dispatch(addMainNode());
-      dispatch(
-        addChildrenById({ parentId: me.data.parentId.id, childId: nodes })
+      const parent_ = nodes.find((node) => node.id === data.parentNode.id);
+      let fromPartner = parent_.data.childNodes.find(
+        (child) => child.id === id
       );
+      let fromEx = parent_.data.exchildNodes.find(
+        (exchild) => exchild.id === id
+      );
+      const [newNodes, newEdges] = addSibling(
+        nodeCount,
+        nodes.find((node) => node.id === data.parentNode.id),
+        fromEx
+      );
+      if (fromPartner) {
+        setNodes([
+          ...nodes
+            .map((node) =>
+              node.id === data.parentNode.id
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      children: node.data.children + 1,
+                      childNodes: [...node.data.childNodes, ...newNodes],
+                    },
+                  }
+                : node
+            )
+            .map((node) => {
+              if (node.data.parentNode) {
+                return node.data.parentNode.id === id.replace(/\D/g, "")
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        parentNode: {
+                          ...node.data.parentNode,
+                          data: {
+                            ...node.data.parentNode.data,
+                            children: node.data.parentNode.data.children + 1,
+                            childNodes: [
+                              ...node.data.parentNode.data.childNodes,
+                              ...newNodes,
+                            ],
+                          },
+                        },
+                      },
+                    }
+                  : node;
+              }
+              return node;
+            }),
+          ...newNodes,
+        ]);
+      }
+      if (fromEx) {
+        setNodes([
+          ...nodes
+            .map((node) =>
+              node.id === data.parentNode.id
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      exchildren: node.data.exchildren + 1,
+                      exchildNodes: [...node.data.exchildNodes, ...newNodes],
+                      parentNode: node.data.parentNode.data
+                        ? {
+                            ...node.data.parentNode,
+                            data: {
+                              ...node.data.parentNode.data,
+                              exchildren: node.data.parentNode.exchildren + 1,
+                              exchildNodes: [
+                                ...node.data.parentNode.exchildNodes,
+                                ...newNodes,
+                              ],
+                            },
+                          }
+                        : node.data.parentNode,
+                    },
+                  }
+                : node
+            )
+            .map((node) => {
+              if (node.data.parentNode) {
+                return node.data.parentNode.id === id.replace(/\D/g, "")
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        parentNode: {
+                          ...node.data.parentNode,
+                          data: {
+                            ...node.data.parentNode.data,
+                            exchildren:
+                              node.data.parentNode.data.exchildren + 1,
+                            exchildNodes: [
+                              ...node.data.parentNode.data.exchildNodes,
+                              ...newNodes,
+                            ],
+                          },
+                        },
+                      },
+                    }
+                  : node;
+              }
+              return node;
+            }),
+          ...newNodes,
+        ]);
+      }
+      setEdges([...edges, ...newEdges]);
+      setNodeCount(nodeCount + 1);
     }
   };
-  const handleDeleteNode = () => dispatch(deleteNode(id));
   const handleAddParent = () => {
-    const { nodes, edges } = addParent(id, data.position, mainNodes, me);
-    setHandles({ ...handles, parents: true });
-    dispatch(updateFlow({ nodes, edges }));
-    dispatch(addParentById({ id, parentId: nodes[0] }));
-    dispatch(addMainNode());
+    const me = nodes.find((node) => node.id === id);
+    const [newNodes, newEdges] = addParents(me, nodeCount, id);
+    setNodes([
+      ...nodes.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              data: { ...node.data, parent: true, parentNode: newNodes[0] },
+            }
+          : node
+      ),
+      ...newNodes,
+    ]);
+    setParent(newNodes[0].id);
+    setEdges([...edges, ...newEdges]);
+    setNodeCount(nodeCount + 1);
   };
   const handleAddPartner = () => {
-    setHandles({ ...handles, partner: true });
-    dispatch(addPartner({ id }));
-    dispatch(updateFlow(addPartner_(id, data.position, data.gender)));
+    const [newNodes, newEdges] = addPartner(data, id);
+    setNodes([
+      ...nodes
+        .map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  partner: true,
+                  parentNode: node.data.parentNode.data
+                    ? {
+                        ...node.data.parentNode,
+                        data: {
+                          ...node.data.parentNode.data,
+                          childNodes:
+                            node.data.parentNode.data.children > 0
+                              ? node.data.parentNode.data.childNodes.map(
+                                  (child) =>
+                                    child.id === id
+                                      ? {
+                                          ...child,
+                                          data: {
+                                            ...child.data,
+                                            partner: true,
+                                          },
+                                        }
+                                      : child
+                                )
+                              : node.data.childNodes,
+                          exchildNodes:
+                            node.data.parentNode.exchildren > 0
+                              ? node.data.parentNode.data.exchildNodes.map(
+                                  (child) =>
+                                    child.id === id
+                                      ? {
+                                          ...child,
+                                          data: {
+                                            ...child.data,
+                                            partner: true,
+                                          },
+                                        }
+                                      : child
+                                )
+                              : node.data.childNodes,
+                        },
+                      }
+                    : node.data.parentNode,
+                },
+              }
+            : node
+        )
+        .map((node) =>
+          node.id === data.parentNode.id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  childNodes:
+                    node.data.children > 0
+                      ? node.data.childNodes.map((child) =>
+                          child.id === id
+                            ? {
+                                ...child,
+                                data: {
+                                  ...child.data,
+                                  partner: true,
+                                },
+                              }
+                            : child
+                        )
+                      : node.data.childNodes,
+                  exchildNodes:
+                    node.data.exchildren > 0
+                      ? node.data.exchildNodes.map((child) =>
+                          child.id === id
+                            ? {
+                                ...child,
+                                data: {
+                                  ...child.data,
+                                  partner: true,
+                                },
+                              }
+                            : child
+                        )
+                      : node.data.exchildNodes,
+                },
+              }
+            : node
+        ),
+      ...newNodes,
+    ]);
+    setEdges([...edges, ...newEdges]);
   };
   const handleAddExPartner = () => {
-    setHandles({ ...handles, expartner: true });
-    dispatch(updateFlow(addEx(id, data.position, data.gender, data.partner)));
-    dispatch(addExPartner({ id }));
+    const [newNodes, newEdges] = addEx(data, id);
+    setNodes([
+      ...nodes
+        .map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  expartner: true,
+                  parentNode: node.data.parentNode.data
+                    ? {
+                        ...node.data.parentNode,
+                        data: {
+                          ...node.data.parentNode.data,
+                          childNodes:
+                            node.data.parentNode.children > 0
+                              ? node.data.parentNode.data.childNodes.map(
+                                  (child) =>
+                                    child.id === id
+                                      ? {
+                                          ...child,
+                                          data: {
+                                            ...child.data,
+                                            expartner: true,
+                                          },
+                                        }
+                                      : child
+                                )
+                              : node.data.childNodes,
+                          exchildNodes:
+                            node.data.parentNode.exchildren > 0
+                              ? node.data.parentNode.data.exchildNodes.map(
+                                  (child) =>
+                                    child.id === id
+                                      ? {
+                                          ...child,
+                                          data: {
+                                            ...child.data,
+                                            expartner: true,
+                                          },
+                                        }
+                                      : child
+                                )
+                              : node.data.childNodes,
+                        },
+                      }
+                    : node.data.parentNode,
+                },
+              }
+            : node
+        )
+        .map((node) =>
+          node.id === data.parentNode.id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  childNodes:
+                    node.data.children > 0
+                      ? node.data.childNodes.map((child) =>
+                          child.id === id
+                            ? {
+                                ...child,
+                                data: {
+                                  ...child.data,
+                                  expartner: true,
+                                },
+                              }
+                            : child
+                        )
+                      : node.data.childNodes,
+                  exchildNodes:
+                    node.data.exchildren > 0
+                      ? node.data.exchildNodes.map((child) =>
+                          child.id === id
+                            ? {
+                                ...child,
+                                data: {
+                                  ...child.data,
+                                  expartner: true,
+                                },
+                              }
+                            : child
+                        )
+                      : node.data.exchildNodes,
+                },
+              }
+            : node
+        ),
+      ...newNodes,
+    ]);
+    setEdges([...edges, ...newEdges]);
+  };
+  const handleDeleteNode = () => {
+    const newNodes = deleteNode(id, nodes);
+    const newEdges = deleteEdge(id, edges, nodes);
+    setNodes([...newNodes]);
+    setEdges([...newEdges]);
   };
   const menuClose = () => {
     toggleButtons(false);
     toggleAddMenu(false);
   };
+
   return (
     <div
       className="container"
@@ -88,10 +390,10 @@ const ProfileCard = ({ id, data }) => {
         addSibling={handleAddSibling}
         deleteNode={handleDeleteNode}
         toggleAddMenu={toggleAddMenu}
-        hasParents={handles.parents}
-        hasPartner={handles.partner}
-        hasExPartner={handles.expartner}
-        isSibling={handles.isSibling}
+        hasParents={data.parents}
+        hasPartner={data.partner}
+        hasExPartner={data.expartner}
+        isSibling={data.isSibling}
         viewButtons={viewButtons}
         viewAddMenu={viewAddMenu}
       />

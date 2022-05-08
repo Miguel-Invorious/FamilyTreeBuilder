@@ -1,11 +1,11 @@
-import { useDispatch } from "react-redux";
-import { deleteNode } from "./redux/flowSlice";
 import ProfileCard from "./components/profile-card/ProfileCard";
 import RelationCard from "./components/relation-card/RelationCard";
 import RelationshipEdge from "./components/relationship-edge/RelationshipEdge";
 import CustomEdge from "./components/CustomEdge";
-import { bool, number } from "prop-types";
-export const initialPosition = { x: 0, y: 0 };
+//import { initialEdge, initialNode } from "./nodes";
+import { node, number, string } from "prop-types";
+import { atom } from "jotai";
+
 export const heightGap = 380;
 export const heightOffset = 40;
 export const widthGap = 300;
@@ -19,248 +19,302 @@ export const nodeTypes = {
   profileNode: ProfileCard,
   relationNode: RelationCard,
 };
-export const addParentsAndSiblings = (
-  id,
-  currentPosition = { x: number, y: number },
-  mainNodes = number,
-  child
-) => {
-  const sibling = {
-    id: `${mainNodes + 1}`,
+export const nodeData = {
+  parent: false,
+  partner: false,
+  expartner: false,
+  children: 0,
+  exchildren: 0,
+  childNodes: [],
+  exchildNodes: [],
+  parentNode: [],
+  gender: "female",
+  position: { x: 0, y: 0 },
+};
+export const relationNodeData = {};
+export const initialNode = [
+  {
+    id: "0",
     type: "profileNode",
-    position: {
-      x: currentPosition.x + widthGap,
-      y: currentPosition.y,
-    },
-    data: {
-      parents: true,
-      parentId: `${mainNodes}`,
-      partner: true,
-      expartner: false,
-      children: 0,
-      exchildren: 0,
-      childrenId: [],
-      exchildrenId: [],
-      gender: "female",
-      position: {
-        x: currentPosition.x + widthGap,
-        y: currentPosition.y,
-      },
-    },
-  };
-  let nodes = [];
-  let edges = [];
-  for (let i = 0; i < 2; i++) {
-    let position = {
-      x: currentPosition.x + (i % 2) === 0 ? widthGap / 2 : -widthGap / 2,
-      y: currentPosition.y - heightGap,
-    };
-    nodes.push({
-      id: i % 2 === 0 ? `${mainNodes}` : `${mainNodes}-partner`,
-      type: i % 2 === 0 ? "profileNode" : "relationNode",
-      position,
-      data: {
-        position,
-        gender: i % 2 === 0 ? "female" : "male",
-        isParent: i % 2 === 0,
-        isPartner: i % 2 === 0 ? false : true,
-        partner: i % 2 === 0,
-        children: i % 2 === 0 && 2,
-        childrenId: i % 2 === 0 && [child, sibling],
-        exchildrenId: i % 2 === 0 && [],
-        parentId: [],
-        expartner: false,
-        exchildren: 0,
-      },
-    });
-  }
-  nodes.push(sibling);
-  edges.push(
-    {
-      id: `e-${mainNodes}-${id}`,
-      type: "customEdge",
-      data: "female",
-      source: `${mainNodes}`,
-      target: `${id}`,
-      targetHandle: "top",
-    },
-    {
-      id: `e-${mainNodes}-partner`,
-      type: "relationEdge",
-      source: `${mainNodes}`,
-      target: `${mainNodes}-partner`,
-    },
-    {
-      id: `e-${mainNodes + 1}-${mainNodes}`,
-      type: "customEdge",
-      data: sibling.data.gender,
-      source: `${mainNodes}`,
-      target: `${mainNodes + 1}`,
-      targetHandle: "top",
-    }
-  );
-  return { nodes, edges };
-};
-
-export const addParent = (
-  childId = "",
-  childPosition = { x: number, y: number },
-  mainNodes = number,
-  child
-) => {
-  let nodes = [];
-  let edges = [];
-  for (let i = 0; i < 2; i++) {
-    let position = {
-      x:
-        i % 2 === 0
-          ? childPosition.x + 0.5 * widthGap
-          : childPosition.x - 0.5 * widthGap,
-      y: childPosition.y - heightGap,
-    };
-    nodes.push({
-      id: i % 2 === 0 ? `${mainNodes}` : `${mainNodes}-partner`,
-      type: i % 2 === 0 ? "profileNode" : "relationNode",
-      position,
-      data: {
-        position,
-        gender: i % 2 === 0 ? "female" : "male",
-        isParent: i % 2 === 0,
-        isPartner: i % 2 === 0 ? false : true,
-        partner: i % 2 === 0,
-        children: i % 2 === 0 && 1,
-        childrenId: i % 2 === 0 && [child],
-        exchildrenId: i % 2 === 0 && [],
-        parentId: [],
-        expartner: false,
-        exchildren: 0,
-      },
-    });
-  }
-  edges.push(
-    {
-      id: `e-${mainNodes}-${childId}`,
-      type: "customEdge",
-      data: "female",
-      source: `${mainNodes}`,
-      target: `${childId}`,
-      targetHandle: "top",
-    },
-    {
-      id: `e-${mainNodes}-partner`,
-      type: "relationEdge",
-      source: `${mainNodes}`,
-      target: `${mainNodes}-partner`,
-    }
-  );
-  return { nodes, edges };
-};
-export const addPartner_ = (
-  partnerId = "",
-  partnerPosition = { x: number, y: number },
-  partnerGender = ""
-) => {
+    position: { x: 0, y: 0 },
+    data: nodeData,
+  },
+];
+export const initialEdge = [];
+export const nodesAtom = atom(initialNode);
+export const edgesAtom = atom(initialEdge);
+export const parentAtom = atom("0");
+export const nodeCountAtom = atom(1);
+export const addPartner = (me, id = string) => {
   const nodes = [
     {
-      id: `${partnerId}-partner`,
+      id: `${id}-partner`,
       type: "relationNode",
       position: {
         x:
-          partnerGender === "female"
-            ? partnerPosition.x - widthGap
-            : partnerPosition.x + widthGap,
-        y: partnerPosition.y,
+          me.gender === "female"
+            ? me.position.x - widthGap
+            : me.position.x + widthGap,
+        y: me.position.y,
       },
       data: {
-        isPartner: true,
-        gender: partnerGender === "female" ? "male" : "female",
+        gender: me.gender === "female" ? "male" : "female",
       },
     },
   ];
   const edges = [
     {
-      id: `e-${partnerId}-partner`,
+      id: `e-${id}-partner`,
       type: "relationEdge",
-      source: `${partnerId}`,
+      source: `${id}`,
       sourceHandle: "relatives",
-      target: `${partnerId}-partner`,
+      target: `${id}-partner`,
       targetHandle: "partner",
     },
   ];
-  return { nodes, edges };
+  return [nodes, edges];
 };
-
-export const addSibling = (mainNodes, parent) => {
+export const addEx = (data, id) => {
+  const x = data.partner ? 2 * widthGap : widthGap;
+  const position = {
+    x: data.gender === "female" ? data.position.x - x : data.position.x + x,
+    y: data.position.y,
+  };
   const nodes = [
     {
-      id: `${mainNodes}`,
-      type: "profileNode",
-      position: {
-        x:
-          parent.data.childrenId[0].data.position.x +
-          widthGap * parent.data.children,
-        y: parent.data.childrenId[0].data.position.y,
-      },
+      id: `${id}-expartner`,
+      type: "relationNode",
+      position: position,
       data: {
-        parents: true,
-        parentId: parent,
-        partner: false,
-        expartner: false,
-        children: 0,
-        exchildren: 0,
-        childrenId: [],
-        exchildrenId: [],
-        gender: "female",
-        position: {
-          x:
-            parent.data.childrenId[0].data.position.x +
-            widthGap * parent.data.children,
-          y: parent.data.childrenId[0].data.position.y,
-        },
+        isExPartner: true,
+        gender: data.gender === "female" ? "male" : "female",
       },
     },
   ];
   const edges = [
     {
-      id: `e-${mainNodes}-${parent.id}`,
+      id: `e-${id}-expartner`,
+      type: "relationEdge",
+      source: data.partner ? `${id}-partner` : `${id}`,
+      sourceHandle: data.partner ? "expartner" : "relatives",
+      target: `${id}-expartner`,
+      targetHandle: "partner",
+      animated: true,
+    },
+  ];
+  return [nodes, edges];
+};
+
+export const addFamily = (me, id = string, nodeCount = number) => {
+  let nodes = [];
+  let edges = [];
+  const position = {
+    x:
+      me.data.gender === "female"
+        ? me.data.position.x - widthGap
+        : me.data.position.x + widthGap,
+    y: me.data.position.y,
+  };
+  const parentPosition = {
+    x: me.data.position.x,
+    y: me.data.position.y - heightGap,
+  };
+  const sibling = {
+    id: `${nodeCount + 1}`,
+    type: "profileNode",
+    position: position,
+    data: {
+      ...nodeData,
+      position,
+      parent: true,
+    },
+  };
+  const parent = {
+    id: `${nodeCount}`,
+    type: "profileNode",
+    position: parentPosition,
+    data: {
+      ...nodeData,
+      position: parentPosition,
+      partner: true,
+      children: 2,
+      childNodes: [me, sibling],
+      gender: me.data.gender,
+    },
+  };
+
+  nodes.push(
+    ...[
+      parent,
+      {
+        id: `${nodeCount}-partner`,
+        type: "relationNode",
+        position: {
+          ...parentPosition,
+          x:
+            me.data.gender === "female"
+              ? parentPosition.x - widthGap
+              : parentPosition.x + widthGap,
+        },
+        data: { gender: me.data.gender === "male" ? "female" : "male" },
+      },
+      { ...sibling, data: { ...sibling.data, parentNode: parent } },
+    ]
+  );
+  edges.push(
+    ...[
+      {
+        id: `e-${nodeCount}-${id}`,
+        type: "customEdge",
+        data: me.data.gender,
+        source: `${nodeCount}`,
+        target: `${id}`,
+        targetHandle: "top",
+        sourceHandle: "relatives",
+      },
+      {
+        id: `e-${nodeCount}-partner`,
+        type: "relationEdge",
+        source: `${nodeCount}`,
+        target: `${nodeCount}-partner`,
+      },
+      {
+        id: `e-${nodeCount + 1}-${nodeCount}`,
+        type: "customEdge",
+        data: me.data.gender,
+        source: `${nodeCount}`,
+        target: `${nodeCount + 1}`,
+        targetHandle: "top",
+        sourceHandle: "relatives",
+      },
+    ]
+  );
+  return [nodes, edges];
+};
+export const addParents = (me, nodeCount = number, id = string) => {
+  let nodes = [];
+  let edges = [];
+  console.log(me);
+  const parentPosition = {
+    x: me.data.position.x + widthGap / 2,
+    y: me.data.position.y - heightGap,
+  };
+  nodes.push(
+    ...[
+      {
+        id: `${nodeCount}`,
+        type: "profileNode",
+        position: parentPosition,
+        data: {
+          ...nodeData,
+          position: parentPosition,
+          partner: true,
+          children: 1,
+          childNodes: [me],
+          gender: "female",
+        },
+      },
+      {
+        id: `${nodeCount}-partner`,
+        type: "relationNode",
+        position: { ...parentPosition, x: parentPosition.x - widthGap },
+        data: { gender: "male" },
+      },
+    ]
+  );
+  edges.push(
+    ...[
+      {
+        id: `e-${nodeCount}-${id}`,
+        type: "customEdge",
+        data: "female",
+        source: `${nodeCount}`,
+        target: `${id}`,
+        targetHandle: "top",
+        sourceHandle: "relatives",
+      },
+      {
+        id: `e-${nodeCount}-partner`,
+        type: "relationEdge",
+        source: `${nodeCount}`,
+        target: `${nodeCount}-partner`,
+      },
+    ]
+  );
+  return [nodes, edges];
+};
+
+export const addSibling = (nodeCount = number, parent, fromEx) => {
+  const xPos =
+    parent.data.gender === "female"
+      ? fromEx
+        ? parent.data.exchildNodes[0].position.x -
+          widthGap * parent.data.exchildren
+        : parent.data.childNodes[0].position.x - widthGap * parent.data.children
+      : fromEx
+      ? parent.data.exchildNodes[0].position.x +
+        widthGap * parent.data.exchildren
+      : parent.data.childNodes[0].position.x + widthGap * parent.data.children;
+
+  const yPos = parent.position.y + heightGap;
+  const position = {
+    x: xPos,
+    y: yPos,
+  };
+  const nodes = [
+    {
+      id: `${nodeCount}`,
+      type: "profileNode",
+      position,
+      data: {
+        ...nodeData,
+        parent: true,
+        parentNode: parent,
+        position,
+      },
+    },
+  ];
+  const edges = [
+    {
+      id: `e-${nodeCount}-parent`,
       type: "customEdge",
-      data: nodes[0].data.gender,
-      source: `${parent.id}`,
-      target: `${mainNodes}`,
+      data: parent.data.gender,
+      source: fromEx
+        ? parent.data.partner
+          ? `${parent.id}-partner`
+          : `${parent.id}`
+        : `${parent.id}`,
+      sourceHandle: fromEx
+        ? parent.data.partner
+          ? "expartner"
+          : "relatives"
+        : "relatives",
+      target: `${nodeCount}`,
       targetHandle: "top",
     },
   ];
-
-  return {
-    nodes,
-    edges,
-  };
+  return [nodes, edges];
 };
-export const addChild = (
-  parentId = "",
-  parentPosition = { x: number, y: number },
-  parent,
-  mainNodes
-) => {
+export const addChild = (id = "", parent, mainNodes) => {
   const xPos =
     parent.data.gender === "female"
-      ? parentId.replace(/^[a-z]-\d-/, "") === "partner"
+      ? id.replace(/^[a-z]-\d-/, "") === "partner"
         ? parent.data.children > 0
-          ? parent.data.childrenId[0].position.x +
+          ? parent.data.childNodes[0].position.x -
             widthGap * parent.data.children
-          : parentPosition.x - widthGap / 2 - 40
+          : parent.position.x - widthGap / 2
         : parent.data.exchildren > 0
-        ? parent.data.exchildrenId[0].position.x -
+        ? parent.data.exchildNodes[0].position.x -
           widthGap * parent.data.exchildren
-        : parentPosition.x - widthGap / 2 - 40
-      : parentId.replace(/^[a-z]-\d-/, "") === "partner"
+        : parent.position.x - 1.5 * widthGap
+      : id.replace(/^[a-z]-\d-/, "") === "partner"
       ? parent.data.children > 0
-        ? parent.data.childrenId[0].position.x - widthGap * parent.data.children
-        : parentPosition.x + widthGap / 2 - 95
+        ? parent.data.childNodes[0].position.x + widthGap * parent.data.children
+        : parent.position.x + widthGap / 2
       : parent.data.exchildren > 0
-      ? parent.data.exchildrenId[0].position.x +
+      ? parent.data.exchildNodes[0].position.x +
         widthGap * parent.data.exchildren
-      : parentPosition.x - widthGap / 2 - 40;
+      : parent.position.x + 1.5 * widthGap;
 
   const yPos = parent.position.y + heightGap;
   const position = {
@@ -273,15 +327,9 @@ export const addChild = (
       type: "profileNode",
       position,
       data: {
-        parents: true,
-        parentId: parentId.replace(/\D/g, ""),
-        partner: false,
-        expartner: false,
-        children: 0,
-        exchildren: 0,
-        childrenId: [],
-        exchildrenId: [],
-        gender: "female",
+        ...nodeData,
+        parent: true,
+        parentNode: parent,
         position,
       },
     },
@@ -292,55 +340,172 @@ export const addChild = (
       type: "customEdge",
       data: parent.data.gender,
       source:
-        parentId.replace(/^[a-z]-\d-/, "") === "partner"
-          ? `${parentId.replace(/\D/g, "")}`
+        id.replace(/^[a-z]-\d-/, "") === "partner"
+          ? `${id.replace(/\D/g, "")}`
           : parent.data.partner
-          ? `${parentId.replace(/\D/g, "")}-partner`
-          : `${parentId.replace(/\D/g, "")}`,
+          ? `${id.replace(/\D/g, "")}-partner`
+          : `${id.replace(/\D/g, "")}`,
       target: `${mainNodes}`,
       targetHandle: "top",
       sourceHandle: parent.data.expartner ? "expartner" : "relatives",
     },
   ];
 
-  return { nodes, edges };
-};
-export const addEx = (
-  partnerId = "",
-  partnerPosition = { x: number, y: number },
-  partnerGender = "",
-  exParnterCurrentPartner = bool
-) => {
-  const x = exParnterCurrentPartner ? 2 * widthGap : widthGap;
-  const position = {
-    x:
-      partnerGender === "female"
-        ? partnerPosition.x - x
-        : partnerPosition.x + x,
-    y: partnerPosition.y,
-  };
-  const nodes = [
-    {
-      id: `${partnerId}-expartner`,
-      type: "relationNode",
-      position: position,
-      data: {
-        isExPartner: true,
-        gender: partnerGender === "female" ? "male" : "female",
-      },
-    },
-  ];
-  const edges = [
-    {
-      id: `e-${partnerId}-expartner`,
-      type: "relationEdge",
-      source: exParnterCurrentPartner ? `${partnerId}-partner` : `${partnerId}`,
-      sourceHandle: exParnterCurrentPartner ? "expartner" : "relatives",
-      target: `${partnerId}-expartner`,
-      targetHandle: "partner",
-      animated: true,
-    },
-  ];
-  return { nodes, edges };
+  return [nodes, edges];
 };
 
+export const deleteNode = (id, nodes) => {
+  const nodeToDelete = nodes.find((node) => node.id === id);
+  if (nodeToDelete.data.children > 0) {
+    nodeToDelete.data.childNodes.forEach((child) => {
+      nodes = deleteNode(child.id, nodes);
+    });
+  }
+  return nodes
+    .map((node) => {
+      if (node.data.children > 0) {
+        return node.data.childNodes.includes(nodeToDelete)
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                children: node.data.children - 1,
+                childNodes: node.data.childNodes.filter(
+                  (child) => !child.id.includes(nodeToDelete.id)
+                ),
+              },
+            }
+          : node;
+      } else if (node.data.exchildren > 0) {
+        return node.data.exchildNodes.includes(nodeToDelete)
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                exchildren: node.data.exchildren - 1,
+                exchildNodes: node.data.exchildNodes.filter(
+                  (child) => !child.id.includes(nodeToDelete.id)
+                ),
+              },
+            }
+          : node;
+      } else return node;
+    })
+    .filter((node) => !node.id.includes(id));
+};
+export const deleteRelation = (id, nodes) => {
+  const nodePartner = nodes.find((node) => node.id === id.replace(/\D/g, ""));
+  if (nodePartner.data.children > 0) {
+    nodePartner.data.childNodes.forEach(
+      (child) => (nodes = deleteNode(child.id, nodes))
+    );
+  }
+  return nodes
+    .map((node) =>
+      node.id === id.replace(/\D/g, "")
+        ? {
+            ...node,
+            data: {
+              ...node.data,
+              children: 0,
+              childNodes: [],
+              partner:
+                id.replace(/\d-/, "") === "partner" ? false : node.data.partner,
+              expartner:
+                id.replace(/\d-/, "") === "expartner"
+                  ? false
+                  : node.data.expartner,
+            },
+          }
+        : node
+    )
+    .filter((node) => !node.id.includes(id));
+};
+export const deleteEdge = (id, edges, nodes) => {
+  const nodeToDelete = nodes.find((node) => node.id === id);
+  if (nodeToDelete.data.children > 0) {
+    nodeToDelete.data.childNodes.forEach((child) => {
+      edges = deleteEdge(child.id, edges, nodes);
+    });
+  }
+  return edges.filter((edge) => !edge.id.includes(id));
+};
+
+export const reorder = (papuest, nodes, index, ids) => {
+  const me = nodes.find((node) => node.id === papuest);
+  const parent = me && nodes.find((node) => node.id === me.data.parentNode.id);
+  if (me) {
+    if (me.data.childNodes.length > 0) {
+      let ids = [];
+      me.data.childNodes.forEach((child, index) => {
+        ids.push(child.id);
+        nodes = reorder(child.id, nodes, index, ids);
+      });
+      let firstChild = nodes.find((node) => node.id === ids[0]);
+      let lastChild = nodes.find((node) => node.id === ids[ids.length - 1]);
+      const xGap = Math.abs(lastChild.position.x) - firstChild.position.x;
+      const newParentPosX = firstChild.position.x - (xGap + widthGap) / 2;
+      return nodes
+        .map((node) =>
+          node.id === me.id
+            ? {
+                ...node,
+                position: {
+                  ...node.position,
+                  x: newParentPosX,
+                },
+                data: {
+                  ...node.data,
+                  position: {
+                    ...node.position,
+                    x: newParentPosX,
+                  },
+                },
+              }
+            : node
+        )
+        .map((node) =>
+          node.id === `${me.id}-partner`
+            ? {
+                ...node,
+                position: {
+                  ...node.position,
+                  x: newParentPosX + widthGap,
+                },
+                data: {
+                  ...node.data,
+                  position: {
+                    ...node.position,
+                    x: newParentPosX + widthGap,
+                  },
+                },
+              }
+            : node
+        );
+    }
+  }
+  if (parent) {
+    if (index > 0) {
+      const xGap = -widthGap;
+      return nodes.map((node) =>
+        node.id === me.id
+          ? {
+              ...node,
+              position: {
+                ...node.position,
+                x: parent.data.childNodes[0].position.x + xGap * index,
+              },
+              data: {
+                ...node.data,
+                position: {
+                  ...node.position,
+                  x: parent.data.childNodes[0].position.x + xGap * index,
+                },
+              },
+            }
+          : node
+      );
+    }
+  }
+  return nodes;
+};

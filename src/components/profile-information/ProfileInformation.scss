@@ -24,6 +24,11 @@
       top: 50%;
       transform: translate(0, -50%);
     }
+    .center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
     .react-flow__handle {
       visibility: hidden;
     }

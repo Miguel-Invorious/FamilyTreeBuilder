@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Handle } from "react-flow-renderer";
-import { useDispatch, useSelector } from "react-redux";
-import { setGender } from "../../redux/flowSlice";
+import { useAtom } from "jotai";
+import { nodesAtom } from "../../utils";
 import PhotoSelector from "../photo-selector/PhotoSelector";
 import "./ProfileInformation.scss";
 
 const ProfileInformation = ({ closeMenu, gender, id }) => {
   const formRef = useRef(null);
-  const dispatch = useDispatch();
   const [formMenu, setFormMenu] = useState(false);
   const [isDeceased, setDeceased] = useState(false);
+  const [nodes, setNodes] = useAtom(nodesAtom);
   const [information, setInformation] = useState({
     firstname: "firstname",
     birthDate: "Birthdate",
@@ -24,7 +24,13 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
     }
     setFormMenu(false);
     setInformation(data);
-    dispatch(setGender({ id, gender: data.gender }));
+    setNodes(
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, gender: data.gender } }
+          : node
+      )
+    );
   };
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -46,21 +52,21 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
         <div className="photo-container">
           <Handle
             type="target"
-            position={information.gender === "female" ? "left" : "right"}
-            className={information.gender === "female" ? "left" : "right"}
+            position={"left"}
+            className={"center"}
             id="partner"
           />
           <Handle type="target" className="top" position="top" id="top" />
           <Handle
             type="source"
-            position={information.gender === "female" ? "left" : "right"}
-            className={information.gender === "female" ? "left" : "right"}
+            position={"left"}
+            className={"center"}
             id="relatives"
           />
           <Handle
             type="source"
-            position={information.gender === "female" ? "right" : "left"}
-            className={information.gender === "female" ? "right" : "left"}
+            position={"rigth"}
+            className={"center"}
             id="expartner"
           />
           <PhotoSelector closeMenu={closeMenu} />

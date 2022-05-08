@@ -10,10 +10,7 @@ const CustomEdge = ({
   markerEnd,
   data,
 }) => {
-  const centerX =
-    data === "female"
-      ? sourceX - widthGap / 2 + widthOffset
-      : sourceX + widthGap / 2 - widthOffset;
+  const centerX = sourceX + widthGap / 2;
 
   const sourceToCenterX = getSmoothStepPath({
     sourceX,

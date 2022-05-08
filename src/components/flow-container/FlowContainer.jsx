@@ -1,10 +1,25 @@
+import React, { useEffect } from "react";
 import ReactFlow, { MiniMap, Controls, Background } from "react-flow-renderer";
-import { useSelector } from "react-redux";
-import { nodeTypes, edgeTypes } from "../../utils";
+import { useAtom } from "jotai";
+import {
+  nodeTypes,
+  edgeTypes,
+  nodesAtom,
+  edgesAtom,
+  parentAtom,
+  reorder,
+  nodeCountAtom,
+} from "../../utils";
 
 const FlowContainer = () => {
-  const nodes = useSelector((state) => state.flow.nodes);
-  const edges = useSelector((state) => state.flow.edges);
+  const [nodes, setNodes] = useAtom(nodesAtom);
+  const [edges, setEdges] = useAtom(edgesAtom);
+  const [nodeCount] = useAtom(nodeCountAtom);
+  const [parent] = useAtom(parentAtom);
+  console.log("Nodes: ", nodes, " edges:", edges);
+  useEffect(() => {
+    setNodes(reorder(parent, nodes, 0));
+  }, [nodeCount, setNodes]);
   return (
     <div className="App">
       <ReactFlow
