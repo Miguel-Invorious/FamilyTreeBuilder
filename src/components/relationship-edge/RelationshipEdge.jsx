@@ -1,13 +1,16 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { getBezierPath, getEdgeCenter } from "react-flow-renderer";
+import { getEdgeCenter, getSmoothStepPath } from "react-flow-renderer";
 import {
   addChild,
   buttonDimension,
   nodesAtom,
   edgesAtom,
+  parentAtom,
   nodeCountAtom,
+  widthOffset,
+  reorder
 } from "../../utils";
 import { useAtom } from "jotai";
 import "./RelationshipEdge.scss";
@@ -18,17 +21,13 @@ const RelationshipEdge = ({
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   markerEnd,
 }) => {
-  const edgePath = getBezierPath({
+  const edgePath = getSmoothStepPath({
     sourceX,
     sourceY,
-    sourcePosition,
-    targetX,
+    targetX: targetX + widthOffset,
     targetY,
-    targetPosition,
   });
   const [edgeCenterX, edgeCenterY] = getEdgeCenter({
     sourceX,
@@ -40,7 +39,7 @@ const RelationshipEdge = ({
   const [nodes, setNodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
   const [nodeCount, setNodeCount] = useAtom(nodeCountAtom);
-
+  const [papuest]=useAtom(parentAtom)
   const handleClick = () => {
     const me = nodes.find((node) => node.id === id.replace(/\D/g, ""));
     const [newNodes, newEdges] = addChild(id, me, nodeCount);
@@ -110,7 +109,8 @@ const RelationshipEdge = ({
                           ...node.data.parentNode,
                           data: {
                             ...node.data.parentNode.data,
-                            exchildren: node.data.parentNode.data.exchildren + 1,
+                            exchildren:
+                              node.data.parentNode.data.exchildren + 1,
                             exchildNodes: [
                               ...node.data.parentNode.data.exchildNodes,
                               ...newNodes,
@@ -125,7 +125,6 @@ const RelationshipEdge = ({
             }),
           ...newNodes,
         ]);
-
     setEdges([...edges, ...newEdges]);
     setNodeCount(nodeCount + 1);
   };

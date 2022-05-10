@@ -18,8 +18,8 @@ const FlowContainer = () => {
   const [parent] = useAtom(parentAtom);
   console.log("Nodes: ", nodes, " edges:", edges);
   useEffect(() => {
-    setNodes(reorder(parent, nodes, 0));
-  }, [nodeCount, setNodes]);
+    setNodes(reorder(parent, nodes));
+  },[edges]);
   return (
     <div className="App">
       <ReactFlow

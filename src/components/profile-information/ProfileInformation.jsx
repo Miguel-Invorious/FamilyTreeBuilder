@@ -65,8 +65,8 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
           />
           <Handle
             type="source"
-            position={"rigth"}
-            className={"center"}
+            position="left"
+            className="center"
             id="expartner"
           />
           <PhotoSelector closeMenu={closeMenu} />

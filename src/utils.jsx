@@ -5,10 +5,11 @@ import CustomEdge from "./components/CustomEdge";
 //import { initialEdge, initialNode } from "./nodes";
 import { node, number, string } from "prop-types";
 import { atom } from "jotai";
+import { width } from "@mui/system";
 
 export const heightGap = 380;
 export const heightOffset = 40;
-export const widthGap = 300;
+export const widthGap = 310;
 export const widthOffset = 27;
 export const buttonDimension = 30;
 export const edgeTypes = {
@@ -44,7 +45,7 @@ export const initialEdge = [];
 export const nodesAtom = atom(initialNode);
 export const edgesAtom = atom(initialEdge);
 export const parentAtom = atom("0");
-export const nodeCountAtom = atom(1);
+export const nodeCountAtom = atom(7);
 export const addPartner = (me, id = string) => {
   const nodes = [
     {
@@ -194,10 +195,9 @@ export const addFamily = (me, id = string, nodeCount = number) => {
 export const addParents = (me, nodeCount = number, id = string) => {
   let nodes = [];
   let edges = [];
-  console.log(me);
   const parentPosition = {
-    x: me.data.position.x + widthGap / 2,
-    y: me.data.position.y - heightGap,
+    x: me.position.x - widthGap,
+    y: me.position.y - heightGap,
   };
   nodes.push(
     ...[
@@ -299,21 +299,27 @@ export const addChild = (id = "", parent, mainNodes) => {
   const xPos =
     parent.data.gender === "female"
       ? id.replace(/^[a-z]-\d-/, "") === "partner"
-        ? parent.data.children > 0
-          ? parent.data.childNodes[0].position.x -
-            widthGap * parent.data.children
+        ? parent.data.childNodes.length > 0
+          ? parent.data.childNodes[parent.data.childNodes.length - 1].position
+              .x - widthGap
           : parent.position.x - widthGap / 2
-        : parent.data.exchildren > 0
-        ? parent.data.exchildNodes[0].position.x -
-          widthGap * parent.data.exchildren
-        : parent.position.x - 1.5 * widthGap
+        : parent.data.exchildNodes.length > 0
+        ? parent.data.exchildNodes[parent.data.exchildNodes.length - 1].position
+            .x - widthGap
+        : parent.data.partner
+        ? parent.data.childNodes.length > 0
+          ? parent.data.childNodes[parent.data.childNodes.length - 1].position
+              .x - widthGap
+          : parent.position.x - 1.5 * widthGap
+        : parent.position.x - 0.5 * widthGap
       : id.replace(/^[a-z]-\d-/, "") === "partner"
-      ? parent.data.children > 0
-        ? parent.data.childNodes[0].position.x + widthGap * parent.data.children
+      ? parent.data.childNodes.length > 0
+        ? parent.data.childNodes[parent.data.childNodes.length - 1].position.x +
+          widthGap
         : parent.position.x + widthGap / 2
-      : parent.data.exchildren > 0
-      ? parent.data.exchildNodes[0].position.x +
-        widthGap * parent.data.exchildren
+      : parent.data.exchildNodes.length > 0
+      ? parent.data.exchildNodes[parent.data.exchildNodes.length - 1].position
+          .x + widthGap
       : parent.position.x + 1.5 * widthGap;
 
   const yPos = parent.position.y + heightGap;
@@ -355,6 +361,7 @@ export const addChild = (id = "", parent, mainNodes) => {
 };
 
 export const deleteNode = (id, nodes) => {
+  console.log("deleting:", id);
   const nodeToDelete = nodes.find((node) => node.id === id);
   if (nodeToDelete.data.children > 0) {
     nodeToDelete.data.childNodes.forEach((child) => {
@@ -363,8 +370,9 @@ export const deleteNode = (id, nodes) => {
   }
   return nodes
     .map((node) => {
+      let newNode = node;
       if (node.data.children > 0) {
-        return node.data.childNodes.includes(nodeToDelete)
+        newNode = node.data.childNodes.includes(nodeToDelete)
           ? {
               ...node,
               data: {
@@ -375,9 +383,9 @@ export const deleteNode = (id, nodes) => {
                 ),
               },
             }
-          : node;
+          : newNode;
       } else if (node.data.exchildren > 0) {
-        return node.data.exchildNodes.includes(nodeToDelete)
+        newNode = node.data.exchildNodes.includes(nodeToDelete)
           ? {
               ...node,
               data: {
@@ -388,8 +396,9 @@ export const deleteNode = (id, nodes) => {
                 ),
               },
             }
-          : node;
-      } else return node;
+          : newNode;
+      }
+      return newNode;
     })
     .filter((node) => !node.id.includes(id));
 };
@@ -410,9 +419,11 @@ export const deleteRelation = (id, nodes) => {
               children: 0,
               childNodes: [],
               partner:
-                id.replace(/\d-/, "") === "partner" ? false : node.data.partner,
+                id.replace(/\d*-/, "") === "partner"
+                  ? false
+                  : node.data.partner,
               expartner:
-                id.replace(/\d-/, "") === "expartner"
+                id.replace(/\d*-/, "") === "expartner"
                   ? false
                   : node.data.expartner,
             },
@@ -433,74 +444,158 @@ export const deleteEdge = (id, edges, nodes) => {
 
 export const reorder = (papuest, nodes, index, ids) => {
   const me = nodes.find((node) => node.id === papuest);
-  const parent = me && nodes.find((node) => node.id === me.data.parentNode.id);
-  if (me) {
-    if (me.data.childNodes.length > 0) {
-      let ids = [];
-      me.data.childNodes.forEach((child, index) => {
-        ids.push(child.id);
-        nodes = reorder(child.id, nodes, index, ids);
-      });
-      let firstChild = nodes.find((node) => node.id === ids[0]);
-      let lastChild = nodes.find((node) => node.id === ids[ids.length - 1]);
-      const xGap = Math.abs(lastChild.position.x) - firstChild.position.x;
-      const newParentPosX = firstChild.position.x - (xGap + widthGap) / 2;
-      return nodes
-        .map((node) =>
-          node.id === me.id
-            ? {
-                ...node,
-                position: {
-                  ...node.position,
-                  x: newParentPosX,
-                },
-                data: {
-                  ...node.data,
-                  position: {
-                    ...node.position,
-                    x: newParentPosX,
-                  },
-                },
-              }
-            : node
-        )
-        .map((node) =>
-          node.id === `${me.id}-partner`
-            ? {
-                ...node,
-                position: {
-                  ...node.position,
-                  x: newParentPosX + widthGap,
-                },
-                data: {
-                  ...node.data,
-                  position: {
-                    ...node.position,
-                    x: newParentPosX + widthGap,
-                  },
-                },
-              }
-            : node
-        );
-    }
+  var firstChild, lastChild;
+  if (me.data.childNodes.length > 0) {
+    me.data.childNodes.forEach(
+      (child, index) => (nodes = reorder(child.id, nodes, index))
+    );
+    firstChild = nodes.find((node) => node.id === me.data.childNodes[0].id);
+    lastChild = nodes.find(
+      (node) => node.id === me.data.childNodes[me.data.childNodes.length - 1].id
+    );
   }
-  if (parent) {
-    if (index > 0) {
-      const xGap = -widthGap;
-      return nodes.map((node) =>
+  if (index !== undefined) {
+    const parent = nodes.find((node) => node.id === me.data.parentNode.id);
+    const lastSibling =
+      index > 0 &&
+      nodes.find((node) => node.id === parent.data.childNodes[index - 1].id);
+    if (lastSibling) {
+      var partnerPosition,
+        expartnerPosition,
+        lastSiblingPartner,
+        lastSiblingExpartner,
+        help;
+      if (lastSibling.data.partner) {
+        lastSiblingPartner = nodes.find(
+          (node) => node.id === `${lastSibling.id}-partner`
+        );
+      }
+      if (lastSibling.data.expartner) {
+        lastSiblingExpartner = nodes.find(
+          (node) => node.id === `${lastSibling.id}-partner`
+        );
+      }
+      help =
+        lastSibling.data.partner &&
+        lastSibling.data.gender === "male" &&
+        widthGap;
+      console.log(lastSibling.data, me.data);
+      var hasRelation =
+        (lastSibling.data.partner || lastSibling.data.expartner) &&
+        (lastSibling.data.partner
+          ? lastSibling.data.gender === "female"
+            ? me.data.partner
+              ? lastSibling.position.x + 2.5 * widthGap
+              : lastSibling.position.x + 1.5 * widthGap
+            : lastSibling.position.x + 1.5 * widthGap
+          : lastSibling.data.expartner &&
+            lastSiblingExpartner.position.x + 1.5 * widthGap);
+
+      var hasChild =
+        lastSibling.data.childNodes.length > 1 &&
+        lastSibling.data.childNodes[lastSibling.data.childNodes.length - 1]
+          .position.x + widthGap;
+
+      var newPosition =
+        hasChild !== false
+          ? hasChild
+          : hasRelation !== false
+          ? hasRelation
+          : lastSibling.position.x + widthGap;
+      newPosition += help;
+     newPosition= me.data.partner?newPosition+=widthGap:newPosition
+      nodes = nodes.map((node) =>
         node.id === me.id
           ? {
               ...node,
               position: {
                 ...node.position,
-                x: parent.data.childNodes[0].position.x + xGap * index,
+                x: newPosition,
               },
-              data: {
-                ...node.data,
+            }
+          : node
+      );
+      if (me.data.partner) {
+        partnerPosition = me.data.gender === "female" ? -widthGap : widthGap;
+        nodes = nodes.map((node) =>
+          node.id === `${me.id}-partner`
+            ? {
+                ...node,
                 position: {
                   ...node.position,
-                  x: parent.data.childNodes[0].position.x + xGap * index,
+                  x: newPosition + partnerPosition,
                 },
+              }
+            : node
+        );
+      }
+      if (me.data.expartner) {
+        if (me.data.partner) {
+          expartnerPosition = 2 * partnerPosition;
+        } else {
+          expartnerPosition =
+            me.data.gender === "female" ? -widthGap : widthGap;
+        }
+        nodes = nodes.map((node) =>
+          node.id === `${me.id}-expartner`
+            ? {
+                ...node,
+                position: {
+                  ...node.position,
+                  x: newPosition + expartnerPosition,
+                },
+              }
+            : node
+        );
+      }
+    }
+  }
+  if (firstChild && lastChild && me.data.childNodes.length > 0) {
+    var newPos =
+      0.5 * (Math.abs(lastChild.position.x) - firstChild.position.x) +
+      0.5 * widthGap;
+    nodes = nodes
+      .map((node) =>
+        node.id === me.id
+          ? {
+              ...node,
+              position: {
+                ...node.position,
+                x: newPos,
+              },
+            }
+          : node
+      )
+      .map((node) =>
+        node.id === `${me.id}-partner`
+          ? {
+              ...node,
+              position: {
+                ...node.position,
+                x:
+                  me.data.gender === "female"
+                    ? newPos - widthGap
+                    : newPos + widthGap,
+              },
+            }
+          : node
+      );
+    if (me.data.expartner) {
+      if (me.data.partner) {
+        var expartner =
+          me.data.gender === "female"
+            ? newPos - 2 * widthGap
+            : newPos + 2 * widthGap;
+      } else {
+        expartner = me.data.gender === "female" ? -widthGap : widthGap;
+      }
+      nodes = nodes.map((node) =>
+        node.id === `${me.id}-expartner`
+          ? {
+              ...node,
+              position: {
+                ...node.position,
+                x: newPos + expartner,
               },
             }
           : node

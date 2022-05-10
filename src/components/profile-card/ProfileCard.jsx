@@ -20,7 +20,7 @@ import { useAtom } from "jotai";
 const ProfileCard = ({ id, data }) => {
   const [nodes, setNodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
-  const [parent, setParent] = useAtom(parentAtom);
+  const [papuest, setParent] = useAtom(parentAtom);
   const [nodeCount, setNodeCount] = useAtom(nodeCountAtom);
   const [viewButtons, toggleButtons] = useState(false);
   const [viewAddMenu, toggleAddMenu] = useState(false);
@@ -43,11 +43,9 @@ const ProfileCard = ({ id, data }) => {
       setNodeCount(nodeCount + 2);
       setParent(newNodes[0].id);
     } else {
-      const parent_ = nodes.find((node) => node.id === data.parentNode.id);
-      let fromPartner = parent_.data.childNodes.find(
-        (child) => child.id === id
-      );
-      let fromEx = parent_.data.exchildNodes.find(
+      const parent = nodes.find((node) => node.id === data.parentNode.id);
+      let fromPartner = parent.data.childNodes.find((child) => child.id === id);
+      let fromEx = parent.data.exchildNodes.find(
         (exchild) => exchild.id === id
       );
       const [newNodes, newEdges] = addSibling(
@@ -72,7 +70,7 @@ const ProfileCard = ({ id, data }) => {
             )
             .map((node) => {
               if (node.data.parentNode) {
-                return node.data.parentNode.id === id.replace(/\D/g, "")
+                return node.data.parentNode.id === id
                   ? {
                       ...node,
                       data: {
@@ -368,7 +366,49 @@ const ProfileCard = ({ id, data }) => {
   const handleDeleteNode = () => {
     const newNodes = deleteNode(id, nodes);
     const newEdges = deleteEdge(id, edges, nodes);
-    setNodes([...newNodes]);
+    if (data.parent) {
+      const parent = nodes.find((node) => node.id === data.parentNode.id);
+      let fromPartner = parent.data.childNodes.find((child) => child.id === id);
+      let fromEx = parent.data.exchildNodes.find(
+        (exchild) => exchild.id === id
+      );
+      if (fromPartner) {
+        setNodes(
+          newNodes.map((node) =>
+            node.id === data.parentNode.id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    children: node.data.children - 1,
+                    childNodes: node.data.childNodes.filter(
+                      (child) => !child.id.includes(id)
+                    ),
+                  },
+                }
+              : node
+          )
+        );
+      }
+      if (fromEx) {
+        setNodes([
+          ...newNodes.map((node) =>
+            node.id === data.parentNode.id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    exchildren: node.data.exchildren - 1,
+                    exchildNodes: node.data.exchildNodes.filter(
+                      (child) => !child.id.includes(id)
+                    ),
+                  },
+                }
+              : node
+          ),
+        ]);
+      }
+    }
     setEdges([...newEdges]);
   };
   const menuClose = () => {

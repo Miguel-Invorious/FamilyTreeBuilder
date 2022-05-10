@@ -1,16 +1,16 @@
 import React from "react";
 import { getSmoothStepPath } from "react-flow-renderer";
-import { widthGap, widthOffset, buttonDimension } from "../utils";
+import { widthGap } from "../utils";
 const CustomEdge = ({
   id,
   sourceX,
   sourceY,
   targetX,
   targetY,
-  markerEnd,
   data,
 }) => {
-  const centerX = sourceX + widthGap / 2;
+  const centerX =
+    data === "male" ? sourceX + widthGap / 2 : sourceX - widthGap / 2;
 
   const sourceToCenterX = getSmoothStepPath({
     sourceX,
@@ -31,7 +31,6 @@ const CustomEdge = ({
         id={id}
         className="react-flow__edge-path"
         d={sourceToCenterX + centerXtoTarget}
-        markerEnd={markerEnd}
       />
     </>
   );
