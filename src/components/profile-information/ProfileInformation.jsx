@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Handle } from "react-flow-renderer";
 import { useAtom } from "jotai";
 import { nodesAtom } from "../../utils";
 import PhotoSelector from "../photo-selector/PhotoSelector";
 import "./ProfileInformation.scss";
+import { Checkbox, MenuItem, Select, TextField } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers";
 
 const ProfileInformation = ({ closeMenu, gender, id }) => {
   const formRef = useRef(null);
@@ -17,13 +19,14 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
     deceased: false,
     gender,
   });
-  const { register, handleSubmit } = useForm();
+  const { handleSubmit, control } = useForm();
   const onSubmit = (data) => {
     if (closeMenu) {
       closeMenu();
     }
     setFormMenu(false);
     setInformation(data);
+    console.log(data);
     setNodes(
       nodes.map((node) =>
         node.id === id
@@ -35,10 +38,10 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (formRef.current && !formRef.current.contains(event.target)) {
-        setFormMenu(false);
-        if (closeMenu) {
-          closeMenu();
-        }
+        // setFormMenu(false);
+        // if (closeMenu) {
+        //   closeMenu();
+        // }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -47,7 +50,7 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
     };
   }, [formRef, closeMenu]);
   return (
-    <div className="information-container">
+    <div className="information-container" ref={formRef}>
       <div className="profile-card">
         <div className="photo-container">
           <Handle
@@ -71,46 +74,75 @@ const ProfileInformation = ({ closeMenu, gender, id }) => {
           />
           <PhotoSelector closeMenu={closeMenu} />
         </div>
-
         <div className="information">
           {formMenu ? (
-            <form onSubmit={handleSubmit(onSubmit)} ref={formRef}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <label>
                 <span>First Name/s</span>
-                <input
-                  type="text"
-                  defaultValue={information.firstname}
-                  {...register("firstname")}
+                <Controller
+                  name="firstname"
+                  control={control}
+                  render={({ field }) => <TextField {...field} />}
                 />
               </label>
               <label>
                 <span>Last Name</span>
-                <input type="text" {...register("lastname")} />
+                <Controller
+                  name="lastname"
+                  control={control}
+                  render={({ field }) => <TextField {...field} />}
+                />
               </label>
               <label>
                 <span>Date of birth</span>
-                <input type="date" {...register("birthDate")} />
+                <Controller
+                  name="dateOfBirth"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      {...field}
+                      renderInput={(params) => <TextField {...params} />}
+                    />
+                  )}
+                />
               </label>
               <label>
                 <span>Gender</span>
-                <select {...register("gender")}>
-                  <option value={"female"}>Female</option>
-                  <option value={"male"}>Male</option>
-                </select>
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field }) => (
+                    <Select {...field}>
+                      <MenuItem value={"female"}>Female</MenuItem>
+                      <MenuItem value={"male"}>Male</MenuItem>
+                    </Select>
+                  )}
+                />
               </label>
               <label>
                 <span>Deceased</span>
-                <input
-                  type="checkbox"
-                  value={true}
-                  {...register("deceased")}
-                  onChange={() => setDeceased(!isDeceased)}
+                <Controller
+                  name="lastname"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      {...field}
+                      onChange={() => {
+                        field.onChange();
+                        setDeceased(!isDeceased);
+                      }}
+                    />
+                  )}
                 />
               </label>
               {isDeceased && (
                 <label>
                   <span>Date of death</span>
-                  <input type="date" {...register("deathDate")} />
+                  <Controller
+                    name="dateOfDeath"
+                    control={control}
+                    render={({ field }) => <DatePicker {...field} />}
+                  />
                 </label>
               )}
               <input
