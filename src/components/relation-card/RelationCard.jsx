@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ProfileInformation from "../profile-information/ProfileInformation";
-import { deleteRelation, deleteEdge, edgesAtom, nodesAtom } from "../../utils";
+import { deleteRelation, deleteEdge, edgesAtom, nodesAtom } from "../../utils.tsx";
 import { useAtom } from "jotai";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faX } from "@fortawesome/free-solid-svg-icons";

@@ -1,6 +1,6 @@
 import React from "react";
 import { getSmoothStepPath } from "react-flow-renderer";
-import { widthGap } from "../utils";
+import { widthGap } from "../utils.tsx";
 const CustomEdge = ({
   id,
   sourceX,
