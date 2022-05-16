@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Handle } from "react-flow-renderer";
 import { useAtom } from "jotai";
-import { nodesAtom } from "../../utils";
+import { nodesAtom } from "../../utils.tsx";
 import PhotoSelector from "../photo-selector/PhotoSelector";
 import "./ProfileInformation.scss";
 

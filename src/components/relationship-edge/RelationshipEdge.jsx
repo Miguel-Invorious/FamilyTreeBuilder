@@ -11,7 +11,7 @@ import {
   nodeCountAtom,
   widthOffset,
   reorder
-} from "../../utils";
+} from "../../utils.tsx";
 import { useAtom } from "jotai";
 import "./RelationshipEdge.scss";
 
