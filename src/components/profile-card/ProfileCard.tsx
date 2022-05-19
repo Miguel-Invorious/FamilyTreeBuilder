@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ProfileInformation from "../profile-information/ProfileInformation";
+import ProfileInformation from "../profile-information/ProfileInformation.tsx";
 import ProfileButtons from "../profile-buttons/ProfileButtons";
 import {
   nodesAtom,
@@ -17,7 +17,8 @@ import {
 import "./ProfileCard.scss";
 
 import { useAtom } from "jotai";
-import { useFamilyMember } from "../../utils2.ts";
+import { useFamilyMember } from "../../use-family-member.ts";
+import { Gender } from "../../types/gender";
 
 const ProfileCard = ({ id, data }) => {
   const [nodes, setNodes] = useAtom(nodesAtom);
@@ -26,9 +27,9 @@ const ProfileCard = ({ id, data }) => {
   const [nodeCount, setNodeCount] = useAtom(nodeCountAtom);
   const [viewButtons, toggleButtons] = useState(false);
   const [viewAddMenu, toggleAddMenu] = useState(false);
-
-  const { addParents, addSibling, addPartner } = useFamilyMember();
-
+  const { gender } = data.familyMember;
+  const { familyMember, addParents, addSibling, addPartner, changeGender } =
+    useFamilyMember();
   const handleAddSibling = () => {
     addSibling();
   };
@@ -38,9 +39,11 @@ const ProfileCard = ({ id, data }) => {
   };
 
   const handleAddPartner = () => {
-    addPartner();
+    addPartner(data.familyMember);
   };
-
+  const handleChangeGender = (gender: Gender) => {
+    changeGender(data.familyMember, gender);
+  };
   const handleAddExPartner = () => {
     const [newNodes, newEdges] = addEx(data, id);
     setNodes([
@@ -195,7 +198,11 @@ const ProfileCard = ({ id, data }) => {
       onMouseEnter={() => toggleButtons(true)}
       onMouseLeave={menuClose}
     >
-      <ProfileInformation closeMenu={menuClose} gender={data.gender} id={id} />
+      <ProfileInformation
+        closeMenu={menuClose}
+        changeGender={handleChangeGender}
+        initialGender={gender}
+      />
       <ProfileButtons
         addParent={handleAddParent}
         addPartner={handleAddPartner}
@@ -203,10 +210,9 @@ const ProfileCard = ({ id, data }) => {
         addSibling={handleAddSibling}
         deleteNode={handleDeleteNode}
         toggleAddMenu={toggleAddMenu}
-        hasParents={data.parents}
-        hasPartner={data.partner}
-        hasExPartner={data.expartner}
-        isSibling={data.isSibling}
+        hasParents={data.haveParents}
+        hasPartner={data.havePartner}
+        hasExPartner={data.haveExPartner}
         viewButtons={viewButtons}
         viewAddMenu={viewAddMenu}
       />

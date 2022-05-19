@@ -1,24 +1,25 @@
-import React, { useEffect, useState } from "react";
-import ReactFlow, { MiniMap, Controls, Background } from "react-flow-renderer";
+import React, { useEffect } from "react";
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  useReactFlow,
+} from "react-flow-renderer";
 import { useAtom } from "jotai";
 import {
   nodeTypes,
   edgeTypes,
-  nodesAtom,
-  edgesAtom,
   parentAtom,
-  reorder,
   nodeCountAtom,
 } from "../../utils.tsx";
-import { useFamilyMember } from "../../utils2.ts";
 import { useGetNodesAndEdges } from "../../use-get-nodes-and-edges.ts";
 
 const FlowContainer = () => {
   const [nodes, edges] = useGetNodesAndEdges();
-
-  const [nodeCount] = useAtom(nodeCountAtom);
-  const [parent] = useAtom(parentAtom);
-
+  const reactFlowInstance = useReactFlow();
+  const fitView = () => reactFlowInstance.fitView();
+  console.log("Nodes: ", nodes);
+  //console.log("edges: ", edges);
 
   return (
     <div className="App">
@@ -27,7 +28,7 @@ const FlowContainer = () => {
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        fitView
+        onNodesChange={fitView}
       >
         <MiniMap />
         <Controls />

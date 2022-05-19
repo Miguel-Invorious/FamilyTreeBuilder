@@ -1,16 +1,13 @@
 import React from "react";
 import { getSmoothStepPath } from "react-flow-renderer";
+import { Gender } from "../types/gender.ts";
 import { widthGap } from "../utils.tsx";
-const CustomEdge = ({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  data,
-}) => {
+const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data }) => {
+  const offset = 4;
   const centerX =
-    data === "male" ? sourceX + widthGap / 2 : sourceX - widthGap / 2;
+    data === Gender.Male
+      ? sourceX + widthGap / 2 - offset*2.8
+      : sourceX - widthGap / 2 + offset;
 
   const sourceToCenterX = getSmoothStepPath({
     sourceX,

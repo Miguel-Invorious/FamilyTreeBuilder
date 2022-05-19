@@ -8,7 +8,6 @@ const ProfileButtons = ({
   hasPartner,
   hasExPartner,
   addSibling,
-  isSibling,
   addExPartner,
   deleteNode,
   viewButtons,

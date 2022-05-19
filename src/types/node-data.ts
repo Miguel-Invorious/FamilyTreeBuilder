@@ -1,15 +1,8 @@
-import { Gender } from "./gender";
-import { Position } from "./position";
+import { FamilyMember } from "../use-family-member";
 
 export interface NodeData {
-  parent: boolean;
-  partner: boolean;
-  expartner: boolean;
-  children: number;
-  exchildren: number;
-  childNodes: Node[];
-  exchildNodes: Node[];
-  parentNode: Node[] | Node;
-  gender: Gender;
-  position: Position;
+  haveParents: boolean;
+  havePartner: boolean;
+  haveExPartner: boolean;
+  familyMember: FamilyMember;
 }

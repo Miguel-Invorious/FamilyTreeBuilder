@@ -1,4 +1,4 @@
-import ProfileCard from "./components/profile-card/ProfileCard";
+import ProfileCard from "./components/profile-card/ProfileCard.tsx";
 import RelationCard from "./components/relation-card/RelationCard";
 import RelationshipEdge from "./components/relationship-edge/RelationshipEdge";
 import CustomEdge from "./components/CustomEdge";
