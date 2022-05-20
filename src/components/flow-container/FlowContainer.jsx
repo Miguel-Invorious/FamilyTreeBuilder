@@ -18,6 +18,7 @@ const FlowContainer = () => {
   const [nodes, edges] = useGetNodesAndEdges();
   const reactFlowInstance = useReactFlow();
   const fitView = () => reactFlowInstance.fitView();
+
   console.log("Nodes: ", nodes);
   //console.log("edges: ", edges);
 
@@ -29,6 +30,7 @@ const FlowContainer = () => {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={fitView}
+        fitView
       >
         <MiniMap />
         <Controls />

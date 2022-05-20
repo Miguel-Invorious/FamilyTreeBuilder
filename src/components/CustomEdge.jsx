@@ -6,7 +6,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data }) => {
   const offset = 4;
   const centerX =
     data === Gender.Male
-      ? sourceX + widthGap / 2 - offset*2.8
+      ? sourceX + widthGap / 2 + offset
       : sourceX - widthGap / 2 + offset;
 
   const sourceToCenterX = getSmoothStepPath({
