@@ -1,6 +1,6 @@
 import { atom, useAtom } from "jotai";
 import { Gender } from "./types/gender.ts";
-
+import { Relations } from "./types/relations.enum.ts";
 export interface FamilyMember {
   parents: [FamilyMember | null, FamilyMember | null];
   partner: FamilyMember | null;
@@ -90,9 +90,7 @@ export function useFamilyMember() {
     refresh();
   }
   function deleteMember(familyMember: FamilyMember) {
-    console.log("Deleting:", familyMember);
     if (hasParents(familyMember)) {
-      console.log("Deleting from my parents");
       familyMember.parents.forEach(
         (parent) =>
           (parent.children = parent.children.filter(
@@ -102,7 +100,6 @@ export function useFamilyMember() {
       console.log(familyMember.parents);
     }
     if (hasSiblings(familyMember)) {
-      console.log("Deleting from my siblings");
       familyMember.siblings.forEach(
         (sibling) =>
           (sibling.siblings = sibling.siblings.filter(
@@ -110,9 +107,26 @@ export function useFamilyMember() {
           ))
       );
     }
+    if (hasPartner(familyMember)) {
+      familyMember.partner = null;
+    }
     refresh();
   }
-
+  function deleteRelation(familyMember: FamilyMember, from: string) {
+    if (from === Relations.Partner) {
+      familyMember.partner = null;
+      if (hasChildren(familyMember)) {
+        familyMember.children = [];
+      }
+    }
+    if (from === Relations.ExPartner) {
+      familyMember.exPartner = null;
+      if (hasExChildren(familyMember)) {
+        familyMember.exChildren = [];
+      }
+    }
+    refresh();
+  }
   function hasParents(familyMember: FamilyMember) {
     return familyMember.parents.every((parent) => parent !== null);
   }
@@ -123,6 +137,9 @@ export function useFamilyMember() {
 
   function hasChildren(familyMember: FamilyMember) {
     return familyMember.children.length > 0;
+  }
+  function hasExChildren(familyMember: FamilyMember) {
+    return familyMember.exChildren.length > 0;
   }
   function hasMoreThanOneChild(familyMember: FamilyMember) {
     return familyMember.children.length > 1;
@@ -271,6 +288,7 @@ export function useFamilyMember() {
     hasParents,
     hasSiblings,
     hasChildren,
+    hasExChildren,
     getPreviousUncle,
     hasMoreThanOneChild,
     hasPartner,
@@ -284,6 +302,7 @@ export function useFamilyMember() {
     getPreviousSibling,
     getBaseParent,
     deleteMember,
+    deleteRelation,
   };
 }
 

@@ -280,10 +280,10 @@ export function useGetNodesAndEdges() {
       }
       nodes.push(baseNode);
     }
-    function renderPartner(baseNode: Node, headFamilyMember: FamilyMember) {
+    function renderPartner(baseNode: Node, familyMember: FamilyMember) {
       baseNode.data.havePartner = true;
       let partnerPositionX = 0;
-      if (isFemale(headFamilyMember)) {
+      if (isFemale(familyMember)) {
         partnerPositionX = baseNode.position.x - widthGap;
       } else {
         partnerPositionX = baseNode.position.x + widthGap;
@@ -293,37 +293,37 @@ export function useGetNodesAndEdges() {
           x: partnerPositionX,
           y: baseNode.position.y,
         },
-        headFamilyMember.partner.id,
-        {},
+        familyMember.partner.id,
+        { familyMember },
         NodeType.RelationNode
       );
       const partnerEdge = buildEdge(
-        headFamilyMember.id,
-        headFamilyMember.partner.id,
+        familyMember.id,
+        familyMember.partner.id,
         HandleNames.Relatives,
         HandleNames.Partner,
         EdgeType.RelationEdge,
-        headFamilyMember
+        familyMember
       );
       return { partnerNode, partnerEdge };
     }
 
-    function renderExPartner(baseNode: Node, headFamilyMember: FamilyMember) {
+    function renderExPartner(baseNode: Node, familyMember: FamilyMember) {
       baseNode.data.haveExPartner = true;
 
       let exPartnerPositionX = 0;
-      let edgeSource = headFamilyMember.id;
-      if (isFemale(headFamilyMember)) {
-        if (hasPartner(headFamilyMember)) {
+      let edgeSource = familyMember.id;
+      if (isFemale(familyMember)) {
+        if (hasPartner(familyMember)) {
           exPartnerPositionX = baseNode.position.x - 2 * widthGap;
-          edgeSource = headFamilyMember.partner.id;
+          edgeSource = familyMember.partner.id;
         } else {
           exPartnerPositionX = baseNode.position.x - widthGap;
         }
       } else {
-        if (hasPartner(headFamilyMember)) {
+        if (hasPartner(familyMember)) {
           exPartnerPositionX = baseNode.position.x + 2 * widthGap;
-          edgeSource = headFamilyMember.partner.id;
+          edgeSource = familyMember.partner.id;
         } else {
           exPartnerPositionX = baseNode.position.x + widthGap;
         }
@@ -333,17 +333,17 @@ export function useGetNodesAndEdges() {
           x: exPartnerPositionX,
           y: baseNode.position.y,
         },
-        headFamilyMember.exPartner.id,
-        {},
+        familyMember.exPartner.id,
+        { familyMember },
         NodeType.RelationNode
       );
       const exPartnerEdge = buildEdge(
         edgeSource,
-        headFamilyMember.exPartner.id,
+        familyMember.exPartner.id,
         HandleNames.Relatives,
         HandleNames.Partner,
         EdgeType.RelationEdge,
-        headFamilyMember,
+        familyMember,
         true
       );
       return { exPartnerNode, exPartnerEdge };
