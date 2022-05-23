@@ -16,18 +16,19 @@
 }
 .cropper-container {
   position: relative;
-  width: 60vw;
-  height: 60vh;
+  width: 100%;
+  height: 100%;
   left: 50%;
   transform: translate(-50%);
 }
 .photo-modal {
-  height: 60vh;
-  width: 60vw;
+  height: 100%;
+  width: 100%;
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%);
   .MuiPaper-root {
     overflow-x: hidden;
+    overflow-y: hidden;
   }
 }
