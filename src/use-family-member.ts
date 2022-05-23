@@ -42,9 +42,15 @@ export function useFamilyMember() {
   function addChild(familyMember: FamilyMember) {
     const newChild = createFamilyMember(memberId);
     newChild.parents = [familyMember, familyMember.partner];
-    if (familyMember.children) {
-      newChild.siblings = [...familyMember.children];
+    if (hasChildren(familyMember)) {
+      newChild.siblings = [...newChild.siblings, ...familyMember.children];
       familyMember.children.forEach((child) => child.siblings.push(newChild));
+    }
+    if (hasExChildren(familyMember)) {
+      newChild.siblings = [...newChild.siblings, ...familyMember.exChildren];
+      familyMember.exChildren.forEach((exChild) =>
+        exChild.siblings.push(newChild)
+      );
     }
     memberId++;
     familyMember.children.push(newChild);
@@ -53,8 +59,15 @@ export function useFamilyMember() {
   function addExChild(familyMember: FamilyMember) {
     const newExChild = createFamilyMember(memberId);
     newExChild.parents = [familyMember, familyMember.exPartner];
-    if (familyMember.exChildren) {
-      newExChild.siblings = [...familyMember.exChildren];
+    if (hasChildren(familyMember)) {
+      newExChild.siblings = [...newExChild.siblings, ...familyMember.children];
+      familyMember.children.forEach((child) => child.siblings.push(newExChild));
+    }
+    if (hasExChildren(familyMember)) {
+      newExChild.siblings = [
+        ...newExChild.siblings,
+        ...familyMember.exChildren,
+      ];
       familyMember.exChildren.forEach((exChild) =>
         exChild.siblings.push(newExChild)
       );
@@ -214,9 +227,14 @@ export function useFamilyMember() {
     if (!hasParents(familyMember)) {
       return false;
     }
-    return familyMember.id === familyMember.parents[0].children[0].id;
+    return familyMember.id === familyMember.parents[0].children[0]?.id;
   }
-
+  function isFirstExChild(familyMember:FamilyMember){
+    if(!hasParents(familyMember)){
+      return false
+    }
+    return familyMember.id===familyMember.parents[0].exChildren[0].id
+  }
   function setGender(familyMember: FamilyMember, partner: FamilyMember) {
     const partnerGender =
       familyMember.gender === Gender.Female ? Gender.Male : Gender.Female;
@@ -295,6 +313,7 @@ export function useFamilyMember() {
     hasExPartner,
     isFemale,
     isFirstChild,
+    isFirstExChild,
     setGender,
     changeGender,
     isHeadFamilyMember,

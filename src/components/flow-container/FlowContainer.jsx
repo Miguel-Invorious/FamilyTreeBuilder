@@ -18,7 +18,9 @@ const FlowContainer = () => {
   const [nodes, edges] = useGetNodesAndEdges();
   const reactFlowInstance = useReactFlow();
   const fitView = () => reactFlowInstance.fitView();
-
+  useEffect(() => {
+fitView();
+  }, [nodes]);
   console.log("Nodes: ", nodes);
   //console.log("edges: ", edges);
 

@@ -23,7 +23,7 @@ const ProfileInformation = ({ closeMenu, changeGender, initialGender }) => {
     dateOfBirth: undefined,
     dateOfDeath: undefined,
     deceased: false,
-    gender: Gender[initialGender],
+    gender: undefined,
   });
 
   const {

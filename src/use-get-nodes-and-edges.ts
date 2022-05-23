@@ -7,7 +7,6 @@ import { EdgeType } from "./types/edge-type.ts";
 import { NodeData } from "./types/node-data";
 import { Gender } from "./types/gender.ts";
 import { HandleNames } from "./types/handle-names.ts";
-import { faChessKing } from "@fortawesome/free-solid-svg-icons";
 export const widthGap = 310;
 export const heightGap = 380;
 
@@ -16,14 +15,15 @@ export function useGetNodesAndEdges() {
     familyMember,
     isFemale,
     isFirstChild,
+    isFirstExChild,
     hasParents,
     hasSiblings,
     hasChildren,
+    hasExChildren,
     hasMoreThanOneChild,
     getPreviousUncle,
     hasPartner,
     isHeadFamilyMember,
-    isFemaleAndHasPartner,
     getPreviousSibling,
     getBaseParent,
     hasExPartner,
@@ -42,7 +42,7 @@ export function useGetNodesAndEdges() {
     function render(familyMember: FamilyMember) {
       if (hasChildren(familyMember)) {
         let childrenEdges = [] as Edge[];
-        familyMember.children.forEach((child: FamilyMember) => {
+        familyMember.children.forEach((child) => {
           render(child);
           const edge = buildEdge(
             familyMember.id,
@@ -56,11 +56,36 @@ export function useGetNodesAndEdges() {
         });
         edges.push(...childrenEdges);
       }
+      if (hasExChildren(familyMember)) {
+        let exChildrenEdges = [] as Edge[];
+        familyMember.exChildren.forEach((exChild) => {
+          console.log("Rendering ex child:", exChild.id);
+          render(exChild);
+          const edge = buildEdge(
+            familyMember.id,
+            exChild.id,
+            HandleNames.Children,
+            HandleNames.Parent,
+            EdgeType.CustomEdge,
+            familyMember.gender
+          );
+          exChildrenEdges.push(edge);
+        });
+        edges.push(...exChildrenEdges);
+      }
       let baseNodeX = 0;
       let baseNodeY = 0;
-      let baseNodeData = { familyMember };
-      console.log("Positioning:", familyMember);
+      let baseNodeData: NodeData = {
+        familyMember,
+        haveParents: hasParents(familyMember),
+        havePartner: hasPartner(familyMember),
+        haveExPartner: hasExPartner(familyMember),
+      };
+
       if (!isHeadFamilyMember(familyMember)) {
+        if (isFirstExChild(familyMember) && !hasSiblings(familyMember)) {
+          
+        }
         if (isFirstChild(familyMember)) {
           const { hasPrevUncle, prevUncle } = getPreviousUncle(familyMember);
           if (hasPrevUncle) {
@@ -124,22 +149,17 @@ export function useGetNodesAndEdges() {
           }
         }
       } else {
+        if (hasExChildren(familyMember) && !hasChildren(familyMember)) {
+          const { exChildren } = familyMember;
+          const { x, y } = centerParentNode(exChildren);
+          baseNodeX = x;
+          baseNodeY = y;
+        }
         if (hasChildren(familyMember)) {
           const { children } = familyMember;
-          const { position: firstChildPosition } = getFamilyMemberNode(
-            children[0]
-          );
-          const { position: lastChildPosition } = getFamilyMemberNode(
-            children[children.length - 1]
-          );
-          baseNodeY = lastChildPosition.y - heightGap;
-          const centerX =
-            (lastChildPosition.x - firstChildPosition.x) / 2 + widthGap / 2;
-          if (isFemale(familyMember)) {
-            baseNodeX = firstChildPosition.x + centerX;
-          } else {
-            baseNodeX = lastChildPosition.x - centerX;
-          }
+          const { x, y } = centerParentNode(children);
+          baseNodeX = x;
+          baseNodeY = y;
         } else {
           if (isFirstChild(familyMember)) {
             const { hasPrevUncle, prevUncle } = getPreviousUncle(familyMember);
@@ -147,7 +167,6 @@ export function useGetNodesAndEdges() {
               const { position: prevUnclePosition } =
                 getFamilyMemberNode(prevUncle);
               baseNodeY = prevUnclePosition.y + heightGap;
-              console.log("have previous uncle");
               if (isHeadFamilyMember(prevUncle)) {
                 console.log("with family");
                 if (hasMoreThanOneChild(prevUncle)) {
@@ -280,6 +299,23 @@ export function useGetNodesAndEdges() {
       }
       nodes.push(baseNode);
     }
+    function centerParentNode(children: FamilyMember[]): Position {
+      let x = 0,
+        y = 0;
+      const { position: firstChildPosition } = getFamilyMemberNode(children[0]);
+      const { position: lastChildPosition } = getFamilyMemberNode(
+        children[children.length - 1]
+      );
+      y = lastChildPosition.y - heightGap;
+      const centerX =
+        (lastChildPosition.x - firstChildPosition.x) / 2 + widthGap / 2;
+      if (isFemale(familyMember)) {
+        x = firstChildPosition.x + centerX;
+      } else {
+        x = lastChildPosition.x - centerX;
+      }
+      return { x, y };
+    }
     function renderPartner(baseNode: Node, familyMember: FamilyMember) {
       baseNode.data.havePartner = true;
       let partnerPositionX = 0;
@@ -307,7 +343,6 @@ export function useGetNodesAndEdges() {
       );
       return { partnerNode, partnerEdge };
     }
-
     function renderExPartner(baseNode: Node, familyMember: FamilyMember) {
       baseNode.data.haveExPartner = true;
 
