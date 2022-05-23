@@ -1,13 +1,24 @@
 .information-container {
   position: relative;
+  &:hover {
+    border: 2px solid #ff6fb5;
+    cursor: pointer;
+  }
+  .information {
+    &:hover {
+      border: 2px solid #ff6fb5;
+      cursor: pointer;
+    }
+  }
 }
+
 .profile-card {
   font-size: 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 25px 15px;
+  padding: 25px 35px;
   position: relative;
   .photo-container {
     position: relative;
@@ -40,16 +51,14 @@
     width: 100%;
     padding: 5px;
     margin: 0 10px;
+    position: relative;
+    z-index: 1010;
     .firstname {
       margin: 0;
       font-weight: bold;
     }
     .birthdate {
       margin: 8px 0;
-    }
-    &:hover {
-      border: 2px solid #ff6fb5;
-      cursor: pointer;
     }
   }
 }
@@ -69,10 +78,24 @@
     span {
       text-align: left;
     }
-    input {
+    input,
+    select,
+    option {
       text-align: center;
       font-size: 9px;
       margin-left: 8px;
+      &:focus {
+        outline: none;
+      }
+    }
+    select{
+      background-color: white;
+      border-radius: 2px;
+      border:1px solid gray;
+
+    }
+    input[type="checkbox"]{
+      border: 1px solid gray;
     }
     .error {
       grid-column: 2/3;

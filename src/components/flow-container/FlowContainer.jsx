@@ -5,12 +5,9 @@ import ReactFlow, {
   Background,
   useReactFlow,
 } from "react-flow-renderer";
-import { useAtom } from "jotai";
 import {
   nodeTypes,
   edgeTypes,
-  parentAtom,
-  nodeCountAtom,
 } from "../../utils.tsx";
 import { useGetNodesAndEdges } from "../../use-get-nodes-and-edges.ts";
 
