@@ -4,15 +4,9 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { getEdgeCenter, getSmoothStepPath } from "react-flow-renderer";
 import {
   buttonDimension,
-  nodesAtom,
-  edgesAtom,
-  parentAtom,
-  nodeCountAtom,
   widthOffset,
-  reorder,
 } from "../../utils.tsx";
 import { useFamilyMember } from "../../use-family-member.ts";
-import { useAtom } from "jotai";
 import { Relations } from "../../types/relations.enum.ts";
 import "./RelationshipEdge.scss";
 
@@ -37,9 +31,7 @@ const RelationshipEdge = ({
     targetX,
     targetY,
   });
-
   const { addChild, addExChild } = useFamilyMember();
-  const [papuest] = useAtom(parentAtom);
   const handleClick = () => {
     const splittedId = id.split("-");
     const from = splittedId[splittedId.length - 1];

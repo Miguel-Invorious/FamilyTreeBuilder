@@ -1,12 +1,5 @@
 import React, { useState } from "react";
 import ProfileInformation from "../profile-information/ProfileInformation.tsx";
-import {
-  deleteRelation,
-  deleteEdge,
-  edgesAtom,
-  nodesAtom,
-} from "../../utils.tsx";
-import { useAtom } from "jotai";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faX } from "@fortawesome/free-solid-svg-icons";
 import { useFamilyMember } from "../../use-family-member.ts";
@@ -14,8 +7,6 @@ import { Relations } from "../../types/relations.enum.ts";
 const RelationCard = ({ data, id }) => {
   const [isVisible, setVisible] = useState(false);
   const { deleteRelation } = useFamilyMember();
-  const [nodes, setNodes] = useAtom(nodesAtom);
-  const [edges, setEdges] = useAtom(edgesAtom);
   const toggleMenu = () => setVisible(!isVisible);
   const { familyMember } = data;
   const handleDelete = () => {
