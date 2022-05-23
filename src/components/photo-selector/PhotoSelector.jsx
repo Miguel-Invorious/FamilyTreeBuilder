@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PhotoDialog from "./PhotoDialog";
 import DefaultProfilePhoto from "../../assets/profile-image.jpg";
 import "./PhotoSelector.scss";
-const PhotoSelector = ({ closeMenu }) => {
+const PhotoSelector = () => {
   const [imageSrc, setImageSrc] = useState(null);
   const [open, setOpen] = useState(false);
   const [croppedImage, setCroppedImage] = useState(null);
@@ -26,7 +26,6 @@ const PhotoSelector = ({ closeMenu }) => {
             imageSrc={imageSrc}
             setImageSrc={setImageSrc}
             setCroppedImage={setCroppedImage}
-            closeMenu={closeMenu}
           />
           <img
             src={croppedImage}

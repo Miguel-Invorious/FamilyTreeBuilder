@@ -7,7 +7,7 @@ import { ProfileInformationForm } from "./profile-information";
 import { HandleNames } from "../../types/handle-names.ts";
 
 import "./ProfileInformation.scss";
-const ProfileInformation = ({ closeMenu, changeGender }) => {
+const ProfileInformation = ({ changeGender }) => {
   const formRef = useRef(null);
   const [formMenu, setFormMenu] = useState(false);
   const [isDeceased, setDeceased] = useState(false);
@@ -39,7 +39,7 @@ const ProfileInformation = ({ closeMenu, changeGender }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [formRef, closeMenu]);
+  }, [formRef]);
   return (
     <div className="information-container">
       <div className="profile-card">
@@ -68,7 +68,7 @@ const ProfileInformation = ({ closeMenu, changeGender }) => {
             className="center"
             id={HandleNames.ExPartner}
           />
-          <PhotoSelector closeMenu={closeMenu} />
+          <PhotoSelector />
         </div>
         <div className="information" ref={formRef}>
           {formMenu ? (
