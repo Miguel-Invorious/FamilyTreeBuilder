@@ -27,7 +27,9 @@ const ProfileInformation = ({ changeGender }) => {
   const onSubmit = (data) => {
     setFormMenu(false);
     setInformation(data);
-    changeGender(data.gender);
+    if (changeGender) {
+      changeGender(data.gender);
+    }
   };
   useEffect(() => {
     const handleClickOutside = (event) => {

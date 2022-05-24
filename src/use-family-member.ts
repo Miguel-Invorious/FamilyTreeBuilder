@@ -17,7 +17,6 @@ let memberId = 1;
 export const baseFamilyMemberAtom = atom(baseFamilyMember);
 export function useFamilyMember() {
   const [familyMember, setFamilyMember] = useAtom(baseFamilyMemberAtom);
-
   function addParents(familyMember: FamilyMember) {
     const parentA = createFamilyMember(memberId);
     const parentB = createFamilyMember(memberId, true, `${memberId}-partner`);
@@ -28,7 +27,6 @@ export function useFamilyMember() {
     memberId++;
     refresh();
   }
-
   function addSibling(familyMember: FamilyMember) {
     if (!hasParents(familyMember)) {
       addParents(familyMember);
@@ -38,7 +36,6 @@ export function useFamilyMember() {
     setSibling(familyMember, sibling);
     refresh();
   }
-
   function addChild(familyMember: FamilyMember) {
     const newChild = createFamilyMember(memberId);
     newChild.parents = [familyMember, familyMember.partner];
@@ -143,11 +140,9 @@ export function useFamilyMember() {
   function hasParents(familyMember: FamilyMember) {
     return familyMember.parents.every((parent) => parent !== null);
   }
-
   function hasSiblings(familyMember: FamilyMember) {
     return familyMember.siblings.length > 0;
   }
-
   function hasChildren(familyMember: FamilyMember) {
     return familyMember.children.length > 0;
   }
@@ -180,13 +175,11 @@ export function useFamilyMember() {
       prevUncle: uncles[previousUncleIndex],
     };
   }
-
   function setParents(father: FamilyMember, mother: FamilyMember) {
     father.children.push(familyMember);
     mother.children.push(familyMember);
     familyMember.parents = [father, mother];
   }
-
   function addChildPartnerToParents(
     familyMember: FamilyMember,
     partner: FamilyMember
@@ -218,22 +211,36 @@ export function useFamilyMember() {
     familyMember.siblings.push(sibling);
     sibling.siblings.push(familyMember);
   }
-
   function isFemale(familyMember: FamilyMember) {
     return familyMember.gender === Gender.Female;
   }
-
   function isFirstChild(familyMember: FamilyMember) {
     if (!hasParents(familyMember)) {
       return false;
     }
     return familyMember.id === familyMember.parents[0].children[0]?.id;
   }
-  function isFirstExChild(familyMember:FamilyMember){
-    if(!hasParents(familyMember)){
-      return false
+  function isChild(familyMember: FamilyMember) {
+    if (hasParents(familyMember)) {
+      const { parents } = familyMember;
+      const { children } = parents[0];
+      return children.some((child) => child.id === familyMember.id);
     }
-    return familyMember.id===familyMember.parents[0].exChildren[0].id
+    return false;
+  }
+  function isExChild(familyMember: FamilyMember) {
+    if (hasParents(familyMember)) {
+      const { parents } = familyMember;
+      const { exChildren } = parents[0];
+      return exChildren.some((child) => child.id === familyMember.id);
+    }
+    return false;
+  }
+  function isFirstExChild(familyMember: FamilyMember) {
+    if (!hasParents(familyMember)) {
+      return false;
+    }
+    return familyMember.id === familyMember.parents[0].exChildren[0].id;
   }
   function setGender(familyMember: FamilyMember, partner: FamilyMember) {
     const partnerGender =
@@ -241,7 +248,6 @@ export function useFamilyMember() {
     partner.gender = partnerGender;
     refresh();
   }
-
   function changeGender(familyMember: FamilyMember, gender: Gender) {
     familyMember.gender = gender;
     if (hasParents(familyMember)) {
@@ -254,7 +260,6 @@ export function useFamilyMember() {
     }
     refresh();
   }
-
   function isHeadFamilyMember(familyMember: FamilyMember) {
     if (hasPartner(familyMember)) {
       return true;
@@ -262,9 +267,6 @@ export function useFamilyMember() {
     if (hasChildren(familyMember)) {
       return true;
     }
-  }
-  function isFemaleAndHasPartner(familyMember: FamilyMember) {
-    return hasPartner(familyMember) && isFemale(familyMember);
   }
   function getPreviousSibling(familyMember: FamilyMember): {
     hasPrevSibling: boolean;
@@ -283,6 +285,48 @@ export function useFamilyMember() {
     }
     return { hasPrevSibling: false, prevSibling: {} as FamilyMember };
   }
+  function changeRelationType(
+    familyMember: FamilyMember,
+    actualRelation: Relations,
+    newRelation: Relations
+  ) {
+    if (
+      actualRelation === Relations.Partner &&
+      newRelation === Relations.ExPartner
+    ) {
+      const { partner: newExPartner, exPartner: previousExPartner } =
+        familyMember;
+      if (hasExPartner(familyMember)) {
+        setPartner(familyMember, previousExPartner);
+      } else {
+        familyMember.partner = null;
+      }
+      setExPartner(familyMember, newExPartner);
+    }
+    if (
+      actualRelation === Relations.ExPartner &&
+      newRelation === Relations.Partner
+    ) {
+      const { exPartner: newPartner, partner: previousPartner } = familyMember;
+      if (hasPartner(familyMember)) {
+        setExPartner(familyMember, previousPartner);
+      } else {
+        familyMember.exPartner = null;
+      }
+      setPartner(familyMember, newPartner);
+    }
+    refresh();
+  }
+  function setPartner(familyMember: FamilyMember, partner: FamilyMember) {
+    familyMember.partner = partner;
+    partner.partner = familyMember;
+    partner.id = `${familyMember.id}-partner`;
+  }
+  function setExPartner(familyMember: FamilyMember, exPartner: FamilyMember) {
+    familyMember.exPartner = exPartner;
+    exPartner.exPartner = familyMember;
+    exPartner.id = `${familyMember.id}-expartner`;
+  }
   function getBaseParent() {
     let currentFamilyMember = familyMember;
     while (hasParents(currentFamilyMember)) {
@@ -294,7 +338,6 @@ export function useFamilyMember() {
   function refresh() {
     setFamilyMember({ ...familyMember });
   }
-
   return {
     familyMember,
     addParents,
@@ -307,18 +350,19 @@ export function useFamilyMember() {
     hasSiblings,
     hasChildren,
     hasExChildren,
-    getPreviousUncle,
     hasMoreThanOneChild,
     hasPartner,
     hasExPartner,
     isFemale,
+    isChild,
     isFirstChild,
+    isExChild,
     isFirstExChild,
-    setGender,
-    changeGender,
     isHeadFamilyMember,
-    isFemaleAndHasPartner,
+    changeGender,
+    changeRelationType,
     getPreviousSibling,
+    getPreviousUncle,
     getBaseParent,
     deleteMember,
     deleteRelation,

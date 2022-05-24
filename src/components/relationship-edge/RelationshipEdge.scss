@@ -11,3 +11,35 @@
     display: block;
   }
 }
+.react-flow__edge-path {
+  stroke-width: 3;
+  stroke: #000;
+  &:hover {
+    stroke: #ff6fb5 !important;
+    stroke-width: 6;
+    cursor: pointer;
+  }
+}
+.react-flow__edge.animated path {
+  stroke-width: 4;
+}
+.relation-menu {
+  display: grid;
+  background-color: #e4dede;
+  color: #000;
+  grid-template-columns: repeat(2, 1fr);
+  font-size: 10px;
+  height: 100%;
+  align-items: center;
+  p {
+    margin: 0;
+  }
+  span {
+    font-weight: 900;
+    font-size: 12px;
+    cursor: pointer;
+    &:first-of-type {
+      align-self: start;
+    }
+  }
+}
