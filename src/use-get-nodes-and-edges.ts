@@ -329,7 +329,7 @@ export function useGetNodesAndEdges() {
           y: baseNode.position.y,
         },
         familyMember.partner.id,
-        familyMember,
+        { familyMember },
         NodeType.RelationNode
       );
       const partnerEdge = buildEdge(
@@ -367,7 +367,7 @@ export function useGetNodesAndEdges() {
           y: baseNode.position.y,
         },
         familyMember.exPartner.id,
-        familyMember,
+        { familyMember },
         NodeType.RelationNode
       );
       const exPartnerEdge = buildEdge(
