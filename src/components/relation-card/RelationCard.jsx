@@ -10,7 +10,6 @@ const RelationCard = ({ data, id }) => {
   const toggleMenu = () => setVisible(!isVisible);
   const { familyMember } = data;
   const handleDelete = () => {
-    console.log(data);
     const splitId = id.split("-");
     const from = splitId[splitId.length - 1];
     deleteRelation(familyMember, from);
