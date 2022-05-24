@@ -28,7 +28,7 @@ fitView();
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onNodesChange={fitView}
+        //onNodesChange={fitView}
         fitView
       >
         <MiniMap />

@@ -84,7 +84,6 @@ export function useGetNodesAndEdges() {
 
       if (!isHeadFamilyMember(familyMember)) {
         if (isFirstExChild(familyMember) && !hasSiblings(familyMember)) {
-          
         }
         if (isFirstChild(familyMember)) {
           const { hasPrevUncle, prevUncle } = getPreviousUncle(familyMember);
@@ -330,7 +329,7 @@ export function useGetNodesAndEdges() {
           y: baseNode.position.y,
         },
         familyMember.partner.id,
-        { familyMember },
+        familyMember,
         NodeType.RelationNode
       );
       const partnerEdge = buildEdge(
@@ -345,7 +344,6 @@ export function useGetNodesAndEdges() {
     }
     function renderExPartner(baseNode: Node, familyMember: FamilyMember) {
       baseNode.data.haveExPartner = true;
-
       let exPartnerPositionX = 0;
       let edgeSource = familyMember.id;
       if (isFemale(familyMember)) {
@@ -369,7 +367,7 @@ export function useGetNodesAndEdges() {
           y: baseNode.position.y,
         },
         familyMember.exPartner.id,
-        { familyMember },
+        familyMember,
         NodeType.RelationNode
       );
       const exPartnerEdge = buildEdge(
