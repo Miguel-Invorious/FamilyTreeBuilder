@@ -512,7 +512,17 @@ export function useGetNodesAndEdges() {
             const prevCousin = cousins[cousins.length - 1];
             const { position: prevCousinPosition } =
               getFamilyMemberNode(prevCousin);
+
             x = setPositionWithSiblings(familyMember, prevCousinPosition);
+            if (hasExPartner(prevUncle)) {
+              x += widthGap;
+            }
+            if (hasExPartner(familyMember.parents[0])) {
+              x += widthGap;
+            }
+            if (hasMoreThanOneExChild(familyMember.parents[0])) {
+              x += widthGap * (familyMember.parents[0].exChildren.length - 1);
+            }
           } else {
             if (isFemale(prevUncle)) {
               x = prevUnclePosition.x + 2 * widthGap;
@@ -524,6 +534,9 @@ export function useGetNodesAndEdges() {
             }
             if (hasExPartner(familyMember.parents[0])) {
               x += widthGap;
+            }
+            if (hasMoreThanOneExChild(familyMember.parents[0])) {
+              x += widthGap * (familyMember.parents[0].exChildren.length - 1);
             }
           }
         } else {
