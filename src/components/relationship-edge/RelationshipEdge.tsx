@@ -58,7 +58,7 @@ const RelationshipEdge = ({
     <>
       <path
         id={id}
-        className="react-flow__edge-path"
+        className="react-flow__edge-path relation-edge"
         d={edgePath}
         markerEnd={markerEnd}
         onClick={() => setMenuOpen(true)}
