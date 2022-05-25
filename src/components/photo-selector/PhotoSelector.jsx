@@ -28,7 +28,7 @@ const PhotoSelector = () => {
             setCroppedImage={setCroppedImage}
           />
           <img
-            src={croppedImage}
+            src={croppedImage || DefaultProfilePhoto}
             alt="profile"
             className="picture"
             onClick={() => setOpen(true)}
