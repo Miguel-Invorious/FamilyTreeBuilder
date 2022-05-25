@@ -8,7 +8,7 @@ function App() {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <ReactFlowProvider>
-        <FlowContainer />
+        <FlowContainer></FlowContainer>
       </ReactFlowProvider>
     </LocalizationProvider>
   );
