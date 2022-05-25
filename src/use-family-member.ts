@@ -24,7 +24,8 @@ export function useFamilyMember() {
     parentA.partner = parentB;
     parentB.partner = parentA;
     setGender(parentA, parentB);
-    setParents(parentA, parentB, familyMember);
+    familyMember.parents = [parentA, parentB];
+    parentA.children.push(familyMember);
     memberId++;
     refresh();
   }
@@ -102,41 +103,63 @@ export function useFamilyMember() {
     refresh();
   }
   function deleteMember(familyMember: FamilyMember) {
-    if (hasParents(familyMember)) {
-      familyMember.parents.forEach((parent) => {
-        parent.children = parent.children.filter(
-          (child) => child.id !== familyMember.id
+    const baseParent = getBaseParent();
+    if (baseParent.id !== familyMember.id) {
+      if (hasParents(familyMember)) {
+        familyMember.parents.forEach((parent) => {
+          parent.children = parent.children.filter(
+            (child) => child.id !== familyMember.id
+          );
+          parent.exChildren = parent.exChildren.filter(
+            (exChild) => exChild.id !== familyMember.id
+          );
+        });
+      }
+      if (hasSiblings(familyMember)) {
+        familyMember.siblings.forEach(
+          (sibling) =>
+            (sibling.siblings = sibling.siblings.filter(
+              (sibling) => sibling.id !== familyMember.id
+            ))
         );
-        parent.exChildren = parent.exChildren.filter(
-          (exChild) => exChild.id !== familyMember.id
+      }
+      if (hasChildren(familyMember)) {
+        familyMember.children = [];
+        familyMember.children.forEach(
+          (children) => (children.parents = [null, null])
         );
-      });
-    }
-    if (hasSiblings(familyMember)) {
-      familyMember.siblings.forEach(
-        (sibling) =>
-          (sibling.siblings = sibling.siblings.filter(
-            (sibling) => sibling.id !== familyMember.id
-          ))
-      );
-    }
-    if (hasPartner(familyMember)) {
-      familyMember.partner = null;
+      }
+      if (hasExChildren(familyMember)) {
+        familyMember.exChildren = [];
+        familyMember.exChildren.forEach(
+          (exChildren) => (exChildren.parents = [null, null])
+        );
+      }
+      if (hasPartner(familyMember)) {
+        familyMember.partner = null;
+      }
+    } else {
+      alert("This node cant be deleted");
     }
     refresh();
   }
   function deleteRelation(familyMember: FamilyMember, from: string) {
-    if (from === Relations.Partner) {
-      familyMember.partner = null;
-      if (hasChildren(familyMember)) {
-        familyMember.children = [];
+    const baseParent = getBaseParent();
+    if (baseParent.id !== familyMember.id) {
+      if (from === Relations.Partner) {
+        familyMember.partner = null;
+        if (hasChildren(familyMember)) {
+          familyMember.children = [];
+        }
       }
-    }
-    if (from === Relations.ExPartner) {
-      familyMember.exPartner = null;
-      if (hasExChildren(familyMember)) {
-        familyMember.exChildren = [];
+      if (from === Relations.ExPartner) {
+        familyMember.exPartner = null;
+        if (hasExChildren(familyMember)) {
+          familyMember.exChildren = [];
+        }
       }
+    } else {
+      alert("This node cant be deleted");
     }
     refresh();
   }
@@ -373,6 +396,7 @@ export function useFamilyMember() {
   }
   function getBaseParent() {
     let currentFamilyMember = familyMember;
+
     while (hasParents(currentFamilyMember)) {
       currentFamilyMember = familyMember.parents[0];
     }
