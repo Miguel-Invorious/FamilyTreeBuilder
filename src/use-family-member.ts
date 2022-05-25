@@ -17,13 +17,15 @@ let memberId = 1;
 export const baseFamilyMemberAtom = atom(baseFamilyMember);
 export function useFamilyMember() {
   const [familyMember, setFamilyMember] = useAtom(baseFamilyMemberAtom);
+  //integrate with familyMember
   function addParents(familyMember: FamilyMember) {
     const parentA = createFamilyMember(memberId);
     const parentB = createFamilyMember(memberId, true, `${memberId}-partner`);
     parentA.partner = parentB;
     parentB.partner = parentA;
     setGender(parentA, parentB);
-    setParents(parentA, parentB);
+    familyMember.parents = [parentA, parentB];
+    parentA.children.push(familyMember);
     memberId++;
     refresh();
   }
@@ -71,6 +73,7 @@ export function useFamilyMember() {
     }
     memberId++;
     familyMember.exChildren.push(newExChild);
+
     refresh();
   }
   function addPartner(familyMember: FamilyMember) {
@@ -100,40 +103,63 @@ export function useFamilyMember() {
     refresh();
   }
   function deleteMember(familyMember: FamilyMember) {
-    if (hasParents(familyMember)) {
-      familyMember.parents.forEach(
-        (parent) =>
-          (parent.children = parent.children.filter(
+    const baseParent = getBaseParent();
+    if (baseParent.id !== familyMember.id) {
+      if (hasParents(familyMember)) {
+        familyMember.parents.forEach((parent) => {
+          parent.children = parent.children.filter(
             (child) => child.id !== familyMember.id
-          ))
-      );
-      console.log(familyMember.parents);
-    }
-    if (hasSiblings(familyMember)) {
-      familyMember.siblings.forEach(
-        (sibling) =>
-          (sibling.siblings = sibling.siblings.filter(
-            (sibling) => sibling.id !== familyMember.id
-          ))
-      );
-    }
-    if (hasPartner(familyMember)) {
-      familyMember.partner = null;
+          );
+          parent.exChildren = parent.exChildren.filter(
+            (exChild) => exChild.id !== familyMember.id
+          );
+        });
+      }
+      if (hasSiblings(familyMember)) {
+        familyMember.siblings.forEach(
+          (sibling) =>
+            (sibling.siblings = sibling.siblings.filter(
+              (sibling) => sibling.id !== familyMember.id
+            ))
+        );
+      }
+      if (hasChildren(familyMember)) {
+        familyMember.children = [];
+        familyMember.children.forEach(
+          (children) => (children.parents = [null, null])
+        );
+      }
+      if (hasExChildren(familyMember)) {
+        familyMember.exChildren = [];
+        familyMember.exChildren.forEach(
+          (exChildren) => (exChildren.parents = [null, null])
+        );
+      }
+      if (hasPartner(familyMember)) {
+        familyMember.partner = null;
+      }
+    } else {
+      alert("This node cant be deleted");
     }
     refresh();
   }
   function deleteRelation(familyMember: FamilyMember, from: string) {
-    if (from === Relations.Partner) {
-      familyMember.partner = null;
-      if (hasChildren(familyMember)) {
-        familyMember.children = [];
+    const baseParent = getBaseParent();
+    if (baseParent.id !== familyMember.id) {
+      if (from === Relations.Partner) {
+        familyMember.partner = null;
+        if (hasChildren(familyMember)) {
+          familyMember.children = [];
+        }
       }
-    }
-    if (from === Relations.ExPartner) {
-      familyMember.exPartner = null;
-      if (hasExChildren(familyMember)) {
-        familyMember.exChildren = [];
+      if (from === Relations.ExPartner) {
+        familyMember.exPartner = null;
+        if (hasExChildren(familyMember)) {
+          familyMember.exChildren = [];
+        }
       }
+    } else {
+      alert("This node cant be deleted");
     }
     refresh();
   }
@@ -151,6 +177,9 @@ export function useFamilyMember() {
   }
   function hasMoreThanOneChild(familyMember: FamilyMember) {
     return familyMember.children.length > 1;
+  }
+  function hasMoreThanOneExChild(familyMember: FamilyMember) {
+    return familyMember.exChildren.length > 1;
   }
   function hasPartner(familyMember: FamilyMember) {
     return familyMember.partner != null;
@@ -175,10 +204,14 @@ export function useFamilyMember() {
       prevUncle: uncles[previousUncleIndex],
     };
   }
-  function setParents(father: FamilyMember, mother: FamilyMember) {
-    father.children.push(familyMember);
-    mother.children.push(familyMember);
-    familyMember.parents = [father, mother];
+  function setParents(
+    father: FamilyMember,
+    mother: FamilyMember,
+    child: FamilyMember
+  ) {
+    father.children.push(child);
+    mother.children.push(child);
+    child.parents = [father, mother];
   }
   function addChildPartnerToParents(
     familyMember: FamilyMember,
@@ -258,13 +291,29 @@ export function useFamilyMember() {
           ))
       );
     }
+    if (hasChildren(familyMember)) {
+      familyMember.children.forEach(
+        (child) => (child.parents[0].gender = gender)
+      );
+    }
+    if (hasExChildren(familyMember)) {
+      familyMember.exChildren.forEach(
+        (exChild) => (exChild.parents[0].gender = gender)
+      );
+    }
     refresh();
   }
   function isHeadFamilyMember(familyMember: FamilyMember) {
     if (hasPartner(familyMember)) {
       return true;
     }
+    if (hasExPartner(familyMember)) {
+      return true;
+    }
     if (hasChildren(familyMember)) {
+      return true;
+    }
+    if (hasExChildren(familyMember)) {
       return true;
     }
   }
@@ -280,6 +329,24 @@ export function useFamilyMember() {
         return {
           hasPrevSibling: true,
           prevSibling: children[previousSiblingIndex],
+        };
+      }
+    }
+    return { hasPrevSibling: false, prevSibling: {} as FamilyMember };
+  }
+
+  function getPreviousExSibling(familyMember: FamilyMember): {
+    hasPrevSibling: boolean;
+    prevSibling: FamilyMember;
+  } {
+    if (hasParents(familyMember)) {
+      const { exChildren } = familyMember.parents[0];
+      const previousSiblingIndex =
+        exChildren.map((child) => child.id).indexOf(familyMember.id) - 1;
+      if (previousSiblingIndex >= 0) {
+        return {
+          hasPrevSibling: true,
+          prevSibling: exChildren[previousSiblingIndex],
         };
       }
     }
@@ -329,10 +396,10 @@ export function useFamilyMember() {
   }
   function getBaseParent() {
     let currentFamilyMember = familyMember;
+
     while (hasParents(currentFamilyMember)) {
       currentFamilyMember = familyMember.parents[0];
     }
-
     return currentFamilyMember;
   }
   function refresh() {
@@ -351,6 +418,7 @@ export function useFamilyMember() {
     hasChildren,
     hasExChildren,
     hasMoreThanOneChild,
+    hasMoreThanOneExChild,
     hasPartner,
     hasExPartner,
     isFemale,
@@ -362,6 +430,7 @@ export function useFamilyMember() {
     changeGender,
     changeRelationType,
     getPreviousSibling,
+    getPreviousExSibling,
     getPreviousUncle,
     getBaseParent,
     deleteMember,

@@ -14,10 +14,12 @@
 .react-flow__edge-path {
   stroke-width: 3;
   stroke: #000;
+}
+.react-flow__edge-path.relation-edge {
+  cursor: pointer;
   &:hover {
     stroke: #ff6fb5 !important;
     stroke-width: 6;
-    cursor: pointer;
   }
 }
 .react-flow__edge.animated path {

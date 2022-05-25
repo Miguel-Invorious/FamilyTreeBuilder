@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faX } from "@fortawesome/free-solid-svg-icons";
+import DeleteDialog from "../delete-dialog/DeleteDialog";
+
 const ProfileButtons = ({
   addParent,
   hasParents,
@@ -14,6 +16,10 @@ const ProfileButtons = ({
   viewAddMenu,
   toggleAddMenu,
 }) => {
+  const [open, setOpen] = useState(false);
+  const handleClose = () => {
+    setOpen(false);
+  };
   return (
     <>
       {viewButtons && (
@@ -36,12 +42,12 @@ const ProfileButtons = ({
               <FontAwesomeIcon icon={faPlus} />
             </div>
           )}
-
-          <div className="button bottom" onClick={deleteNode}>
+          <div className="button bottom" onClick={() => setOpen(true)}>
             <FontAwesomeIcon icon={faX} />
           </div>
         </>
       )}
+      <DeleteDialog open={open} onClose={handleClose} deleteNode={deleteNode} />
     </>
   );
 };

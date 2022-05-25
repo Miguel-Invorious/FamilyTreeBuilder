@@ -1,0 +1,19 @@
+.delete-modal .container {
+  padding: 5%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  .buttons {
+    margin-top: 10px;
+    display: flex;
+    button {
+      margin-right: 10px;
+      padding: 5px 10px;
+      background-color: #ececec;
+      border-radius: 5px;
+      width: 100%;
+      border: 1px solid #000;
+    }
+  }
+}

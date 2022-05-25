@@ -79,7 +79,7 @@ const ProfileInformation = ({ changeGender }) => {
                 <span>First Name/s</span>
                 <input
                   defaultValue={information.firstname}
-                  {...register("firstname", { required: true })}
+                  {...register("firstname")}
                 />
                 <span className="error">{errors.firstname && "required"}</span>
               </label>
@@ -89,20 +89,14 @@ const ProfileInformation = ({ changeGender }) => {
               </label>
               <label>
                 <span>Date of birth</span>
-                <input
-                  type="date"
-                  {...register("dateOfBirth", { required: true })}
-                />
+                <input type="date" {...register("dateOfBirth")} />
                 <span className="error">
                   {errors.dateOfBirth && "required"}
                 </span>
               </label>
               <label>
                 <span>Gender</span>
-                <select
-                  {...register("gender", { required: true })}
-                  defaultValue="pick your gender"
-                >
+                <select {...register("gender")} defaultValue="pick your gender">
                   <option value={Gender.Female}>{Gender.Female}</option>
                   <option value={Gender.Male}>{Gender.Male}</option>
                 </select>
