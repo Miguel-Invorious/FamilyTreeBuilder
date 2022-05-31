@@ -36,7 +36,7 @@ const PhotoSelector = () => {
         </>
       ) : (
         <label>
-          <img className="picture" src={DefaultProfilePhoto} alt="profile" />
+          <img className="picture no-pic" src={DefaultProfilePhoto} alt="profile"/>
           <input type="file" onChange={onChange} accept="image/*" />
         </label>
       )}

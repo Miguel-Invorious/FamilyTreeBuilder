@@ -3,6 +3,9 @@
   position: relative;
   height: 100%;
   z-index: 1000;
+  &:hover .button {
+    display: block;
+  }
   .buttons {
     height: inherit;
   }
@@ -16,6 +19,7 @@
     border-radius: 8%;
     background-color: #ff6fb5;
     cursor: pointer;
+    display: none;
   }
   .top-handle {
     top: -15px;

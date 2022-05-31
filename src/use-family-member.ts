@@ -17,16 +17,16 @@ let memberId = 1;
 export const baseFamilyMemberAtom = atom(baseFamilyMember);
 export function useFamilyMember() {
   const [familyMember, setFamilyMember] = useAtom(baseFamilyMemberAtom);
-  //integrate with familyMember
   function addParents(familyMember: FamilyMember) {
+    console.log("adding parents to:", familyMember);
     const parentA = createFamilyMember(memberId);
-    const parentB = createFamilyMember(memberId, true, `${memberId}-partner`);
+    const parentB = createFamilyMember(memberId + 1);
     parentA.partner = parentB;
     parentB.partner = parentA;
     setGender(parentA, parentB);
     familyMember.parents = [parentA, parentB];
     parentA.children.push(familyMember);
-    memberId++;
+    memberId += 2;
     refresh();
   }
   function addSibling(familyMember: FamilyMember) {
@@ -204,15 +204,7 @@ export function useFamilyMember() {
       prevUncle: uncles[previousUncleIndex],
     };
   }
-  function setParents(
-    father: FamilyMember,
-    mother: FamilyMember,
-    child: FamilyMember
-  ) {
-    father.children.push(child);
-    mother.children.push(child);
-    child.parents = [father, mother];
-  }
+
   function addChildPartnerToParents(
     familyMember: FamilyMember,
     partner: FamilyMember
@@ -334,7 +326,6 @@ export function useFamilyMember() {
     }
     return { hasPrevSibling: false, prevSibling: {} as FamilyMember };
   }
-
   function getPreviousExSibling(familyMember: FamilyMember): {
     hasPrevSibling: boolean;
     prevSibling: FamilyMember;
@@ -396,7 +387,6 @@ export function useFamilyMember() {
   }
   function getBaseParent() {
     let currentFamilyMember = familyMember;
-
     while (hasParents(currentFamilyMember)) {
       currentFamilyMember = familyMember.parents[0];
     }

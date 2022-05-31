@@ -12,41 +12,41 @@ const ProfileButtons = ({
   addSibling,
   addExPartner,
   deleteNode,
-  viewButtons,
-  viewAddMenu,
-  toggleAddMenu,
 }) => {
+  const [viewAddMenu, setViewAddMenu] = useState(false);
   const [open, setOpen] = useState(false);
   const handleClose = () => {
     setOpen(false);
+    setViewAddMenu(false);
   };
   return (
     <>
-      {viewButtons && (
-        <>
-          {!hasParents && (
-            <div className="button top" onClick={addParent}>
-              <FontAwesomeIcon icon={faPlus} />
-            </div>
-          )}
-          {viewAddMenu ? (
-            <div className="add-menu rigth">
-              <button onClick={addSibling}>Add sibling</button>
-              {!hasPartner && <button onClick={addPartner}>Add partner</button>}
-              {!hasExPartner && (
-                <button onClick={addExPartner}>Add ex partner</button>
-              )}
-            </div>
-          ) : (
-            <div className="button rigth" onClick={() => toggleAddMenu(true)}>
-              <FontAwesomeIcon icon={faPlus} />
-            </div>
-          )}
-          <div className="button bottom" onClick={() => setOpen(true)}>
-            <FontAwesomeIcon icon={faX} />
+      <>
+        {!hasParents && (
+          <div className="button top" onClick={addParent}>
+            <FontAwesomeIcon icon={faPlus} />
           </div>
-        </>
-      )}
+        )}
+        {viewAddMenu ? (
+          <div
+            className="add-menu rigth"
+            onMouseLeave={() => setViewAddMenu(false)}
+          >
+            <button onClick={addSibling}>Add sibling</button>
+            {!hasPartner && <button onClick={addPartner}>Add partner</button>}
+            {!hasExPartner && (
+              <button onClick={addExPartner}>Add ex partner</button>
+            )}
+          </div>
+        ) : (
+          <div className="button rigth" onClick={() => setViewAddMenu(true)}>
+            <FontAwesomeIcon icon={faPlus} />
+          </div>
+        )}
+        <div className="button bottom" onClick={() => setOpen(true)}>
+          <FontAwesomeIcon icon={faX} />
+        </div>
+      </>
       <DeleteDialog open={open} onClose={handleClose} deleteNode={deleteNode} />
     </>
   );

@@ -34,7 +34,9 @@ const ProfileInformation = ({ changeGender }) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (formRef.current && !formRef.current.contains(event.target)) {
-        setFormMenu(false);
+        formRef.current.children[0].dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true })
+        );
       }
     };
     document.addEventListener("mousedown", handleClickOutside);

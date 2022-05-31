@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import ProfileInformation from "../profile-information/ProfileInformation.tsx";
 import ProfileButtons from "../profile-buttons/ProfileButtons";
 import { useFamilyMember } from "../../use-family-member.ts";
 import { Gender } from "../../types/gender";
 import "./ProfileCard.scss";
 
-const ProfileCard = ({ id, data }) => {
-  const [viewButtons, toggleButtons] = useState(false);
-  const [viewAddMenu, toggleAddMenu] = useState(false);
+const ProfileCard = ({  data }) => {
   const { familyMember } = data;
   const { gender } = familyMember;
   const {
+    familyMember: test,
     addParents,
     addSibling,
     addPartner,
@@ -23,7 +22,7 @@ const ProfileCard = ({ id, data }) => {
   };
 
   const handleAddParent = () => {
-    addParents(familyMember);
+    addParents(familyMember);;
   };
 
   const handleAddPartner = () => {
@@ -38,17 +37,8 @@ const ProfileCard = ({ id, data }) => {
   const handleDeleteNode = () => {
     deleteMember(familyMember);
   };
-  const menuClose = () => {
-    toggleButtons(false);
-    toggleAddMenu(false);
-  };
-
   return (
-    <div
-      className="container"
-      onMouseEnter={() => toggleButtons(true)}
-      onMouseLeave={menuClose}
-    >
+    <div className="container">
       <ProfileInformation
         changeGender={handleChangeGender}
         initialGender={gender}
@@ -59,12 +49,9 @@ const ProfileCard = ({ id, data }) => {
         addExPartner={handleAddExPartner}
         addSibling={handleAddSibling}
         deleteNode={handleDeleteNode}
-        toggleAddMenu={toggleAddMenu}
         hasParents={data.haveParents}
         hasPartner={data.havePartner}
         hasExPartner={data.haveExPartner}
-        viewButtons={viewButtons}
-        viewAddMenu={viewAddMenu}
       />
     </div>
   );
