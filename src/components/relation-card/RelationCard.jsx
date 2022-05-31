@@ -5,10 +5,9 @@ import { faX } from "@fortawesome/free-solid-svg-icons";
 import { useFamilyMember } from "../../use-family-member.ts";
 import { Relations } from "../../types/relations.enum.ts";
 import DeleteDialog from "../delete-dialog/DeleteDialog";
+import "./RelationCard.scss";
 const RelationCard = ({ data, id }) => {
-  const [isVisible, setVisible] = useState(false);
   const { deleteRelation } = useFamilyMember();
-  const toggleMenu = () => setVisible(!isVisible);
   const { familyMember } = data;
   const handleDelete = () => {
     const splitId = id.split("-");
@@ -26,17 +25,11 @@ const RelationCard = ({ data, id }) => {
     setOpen(false);
   };
   return (
-    <div
-      className="container"
-      onMouseEnter={toggleMenu}
-      onMouseLeave={toggleMenu}
-    >
+    <div className="container">
       <ProfileInformation profileData={data} />
-      {isVisible && (
-        <div className="button bottom" onClick={() => setOpen(true)}>
-          <FontAwesomeIcon icon={faX} />
-        </div>
-      )}
+      <div className="button bottom" onClick={() => setOpen(true)}>
+        <FontAwesomeIcon icon={faX} />
+      </div>
       <DeleteDialog
         open={open}
         onClose={handleClose}

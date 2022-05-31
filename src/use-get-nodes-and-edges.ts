@@ -7,9 +7,7 @@ import { EdgeType } from "./types/edge-type.ts";
 import { NodeData } from "./types/node-data";
 import { Gender } from "./types/gender.ts";
 import { HandleNames } from "./types/handle-names.ts";
-import { faM } from "@fortawesome/free-solid-svg-icons";
-export const widthGap = 310;
-export const heightGap = 380;
+import { widthGap, heightGap, widthOffset } from "./utils.tsx";
 
 export function useGetNodesAndEdges() {
   const {
@@ -41,9 +39,8 @@ export function useGetNodesAndEdges() {
     const nodes = [] as Node[];
     const edges = [] as Edge[];
     const baseFamilyMember = getBaseParent();
-
     render(baseFamilyMember);
-
+    
     function render(familyMember: FamilyMember) {
       if (hasChildren(familyMember)) {
         let childrenEdges = [] as Edge[];
@@ -162,7 +159,6 @@ export function useGetNodesAndEdges() {
             const { x, y } = centerParentNode(children, familyMember);
             baseNodeX = x;
             baseNodeY = y;
-            baseNodeData.haveParents = true;
           } else {
             if (isFirstChild(familyMember)) {
               const { hasPrevUncle, prevUncle } =
@@ -353,9 +349,16 @@ export function useGetNodesAndEdges() {
         (lastChildPosition.x - firstChildPosition.x) / 2 + widthGap / 2;
       if (isFemale(familyMember)) {
         x = firstChildPosition.x + centerX;
+        if (!hasMoreThanOneChild(familyMember)) {
+          x += 2;
+        }
       } else {
         x = lastChildPosition.x - centerX;
+        if (!hasMoreThanOneChild(familyMember)) {
+          x += 6;
+        }
       }
+
       return { x, y };
     }
     function renderPartner(baseNode: Node, familyMember: FamilyMember) {
@@ -372,8 +375,7 @@ export function useGetNodesAndEdges() {
           y: baseNode.position.y,
         },
         familyMember.partner.id,
-        { familyMember },
-        NodeType.RelationNode
+        { familyMember }
       );
       const partnerEdge = buildEdge(
         familyMember.id,
