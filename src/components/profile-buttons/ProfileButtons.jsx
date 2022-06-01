@@ -28,10 +28,7 @@ const ProfileButtons = ({
           </div>
         )}
         {viewAddMenu ? (
-          <div
-            className="add-menu rigth"
-            onMouseLeave={() => setViewAddMenu(false)}
-          >
+          <div className="add-menu rigth" onClick={() => setViewAddMenu(false)}>
             <button onClick={addSibling}>Add sibling</button>
             {!hasPartner && <button onClick={addPartner}>Add partner</button>}
             {!hasExPartner && (

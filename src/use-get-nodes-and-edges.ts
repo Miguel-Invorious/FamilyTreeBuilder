@@ -1,4 +1,4 @@
-import { Node, Edge, Handle } from "react-flow-renderer";
+import { Node, Edge } from "react-flow-renderer";
 import { FamilyMember, useFamilyMember } from "./use-family-member.ts";
 import { useEffect, useState } from "react";
 import { Position } from "./types/position";
@@ -7,7 +7,7 @@ import { EdgeType } from "./types/edge-type.ts";
 import { NodeData } from "./types/node-data";
 import { Gender } from "./types/gender.ts";
 import { HandleNames } from "./types/handle-names.ts";
-import { widthGap, heightGap, widthOffset } from "./utils.tsx";
+import { widthGap, heightGap } from "./utils.tsx";
 
 export function useGetNodesAndEdges() {
   const {
@@ -40,7 +40,7 @@ export function useGetNodesAndEdges() {
     const edges = [] as Edge[];
     const baseFamilyMember = getBaseParent();
     render(baseFamilyMember);
-    
+
     function render(familyMember: FamilyMember) {
       if (hasChildren(familyMember)) {
         let childrenEdges = [] as Edge[];
@@ -115,6 +115,9 @@ export function useGetNodesAndEdges() {
               baseNodeY = firstSiblingPosition.y;
               if (isFemale(parent)) {
                 baseNodeX = firstSiblingPosition.x - widthGap;
+                if (hasPartner(children[0]) && isFemale(children[0])) {
+                  baseNodeX -= 1.5 * widthGap;
+                }
               } else {
                 baseNodeX = lastSiblingPosition.x + widthGap;
               }
@@ -375,7 +378,8 @@ export function useGetNodesAndEdges() {
           y: baseNode.position.y,
         },
         familyMember.partner.id,
-        { familyMember }
+        { familyMember },
+        NodeType.RelationNode
       );
       const partnerEdge = buildEdge(
         familyMember.id,

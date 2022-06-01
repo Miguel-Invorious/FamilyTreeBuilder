@@ -5,11 +5,10 @@ import { useFamilyMember } from "../../use-family-member.ts";
 import { Gender } from "../../types/gender";
 import "./ProfileCard.scss";
 
-const ProfileCard = ({  data }) => {
+const ProfileCard = ({ data }) => {
   const { familyMember } = data;
   const { gender } = familyMember;
   const {
-    familyMember: test,
     addParents,
     addSibling,
     addPartner,
@@ -22,7 +21,7 @@ const ProfileCard = ({  data }) => {
   };
 
   const handleAddParent = () => {
-    addParents(familyMember);;
+    addParents(familyMember);
   };
 
   const handleAddPartner = () => {

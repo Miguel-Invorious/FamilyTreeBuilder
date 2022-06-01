@@ -18,9 +18,8 @@ export const baseFamilyMemberAtom = atom(baseFamilyMember);
 export function useFamilyMember() {
   const [familyMember, setFamilyMember] = useAtom(baseFamilyMemberAtom);
   function addParents(familyMember: FamilyMember) {
-    console.log("adding parents to:", familyMember);
     const parentA = createFamilyMember(memberId);
-    const parentB = createFamilyMember(memberId + 1);
+    const parentB = createFamilyMember(memberId, true, `${parentA.id}-partner`);
     parentA.partner = parentB;
     parentB.partner = parentA;
     setGender(parentA, parentB);
@@ -354,6 +353,10 @@ export function useFamilyMember() {
     ) {
       const { partner: newExPartner, exPartner: previousExPartner } =
         familyMember;
+      newExPartner.children = familyMember.children;
+      previousExPartner.children = familyMember.exChildren;
+      familyMember.children = previousExPartner.children;
+      familyMember.exChildren = newExPartner.children;
       if (hasExPartner(familyMember)) {
         setPartner(familyMember, previousExPartner);
       } else {
@@ -365,12 +368,16 @@ export function useFamilyMember() {
       actualRelation === Relations.ExPartner &&
       newRelation === Relations.Partner
     ) {
-      const { exPartner: newPartner, partner: previousPartner } = familyMember;
+      const { exPartner: newPartner, partner: newExPartner } = familyMember;
       if (hasPartner(familyMember)) {
-        setExPartner(familyMember, previousPartner);
+        setExPartner(familyMember, newExPartner);
       } else {
         familyMember.exPartner = null;
       }
+      newPartner.children = familyMember.exChildren;
+      newExPartner.children = familyMember.children;
+      familyMember.exChildren = newExPartner.children;
+      familyMember.children = newPartner.children;
       setPartner(familyMember, newPartner);
     }
     refresh();
@@ -387,9 +394,14 @@ export function useFamilyMember() {
   }
   function getBaseParent() {
     let currentFamilyMember = familyMember;
-    while (hasParents(currentFamilyMember)) {
-      currentFamilyMember = familyMember.parents[0];
-    }
+    let stop = false;
+    do {
+      if (hasParents(currentFamilyMember)) {
+        currentFamilyMember = currentFamilyMember.parents[0];
+      } else {
+        stop = true;
+      }
+    } while (!stop);
     return currentFamilyMember;
   }
   function refresh() {
