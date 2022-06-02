@@ -68,8 +68,9 @@ export function useGetNodesAndEdges() {
           if (exFamily.children.length > 0) {
             exFamily.children.forEach((child) => {
               render(child);
-              if (exFamily.children.length > 1) {
-                center = getFamilyMemberNode(exFamily.children[0]).position.x;
+              center = getFamilyMemberNode(exFamily.children[0]).position.x;
+              if (exFamily.children.length === 1) {
+                center = center + 87;
               }
               let edgeSource = hasPartner(familyMember)
                 ? familyMember.partner.id
@@ -186,7 +187,6 @@ export function useGetNodesAndEdges() {
             baseNodeY = y;
           } else {
             if (isFirstChild(familyMember)) {
-              console.log("first child->", familyMember.id);
               const { hasPrevUncle, prevUncle } =
                 getPreviousUncle(familyMember);
               if (hasPrevUncle) {
