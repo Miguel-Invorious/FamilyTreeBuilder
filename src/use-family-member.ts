@@ -1,14 +1,19 @@
 import { atom, useAtom } from "jotai";
 import { Gender } from "./types/gender.ts";
 import { Relations } from "./types/relations.enum.ts";
+
+export interface ExFamily {
+  partner: FamilyMember;
+  children: FamilyMember[];
+}
 export interface FamilyMember {
   parents: [FamilyMember | null, FamilyMember | null];
   partner: FamilyMember | null;
-  exPartner: FamilyMember | null;
   children: FamilyMember[];
   siblings: FamilyMember[];
-  exChildren: FamilyMember[];
+  exFamilies: ExFamily[];
   gender: Gender;
+  age: number;
   id: string;
 }
 
@@ -45,34 +50,49 @@ export function useFamilyMember() {
       familyMember.children.forEach((child) => child.siblings.push(newChild));
     }
     if (hasExChildren(familyMember)) {
-      newChild.siblings = [...newChild.siblings, ...familyMember.exChildren];
-      familyMember.exChildren.forEach((exChild) =>
-        exChild.siblings.push(newChild)
+      let children = [] as FamilyMember[];
+      familyMember.exFamilies.forEach((exFamily) =>
+        children.push(...exFamily.children)
+      );
+      newChild.siblings = [...newChild.siblings, ...children];
+      familyMember.exFamilies.forEach((exFamily) =>
+        exFamily.children.forEach((children) =>
+          children.siblings.push(newChild)
+        )
       );
     }
-    memberId++;
     familyMember.children.push(newChild);
+    memberId++;
     refresh();
   }
-  function addExChild(familyMember: FamilyMember) {
+  function addExChild(familyMember: FamilyMember, mother: number) {
     const newExChild = createFamilyMember(memberId);
-    newExChild.parents = [familyMember, familyMember.exPartner];
+    const { children, exFamilies } = familyMember;
+    newExChild.parents = [familyMember, exFamilies[mother].partner];
     if (hasChildren(familyMember)) {
-      newExChild.siblings = [...newExChild.siblings, ...familyMember.children];
-      familyMember.children.forEach((child) => child.siblings.push(newExChild));
+      newExChild.siblings = [...newExChild.siblings, ...children];
+      children.forEach((child) => child.siblings.push(newExChild));
     }
     if (hasExChildren(familyMember)) {
-      newExChild.siblings = [
-        ...newExChild.siblings,
-        ...familyMember.exChildren,
-      ];
-      familyMember.exChildren.forEach((exChild) =>
-        exChild.siblings.push(newExChild)
+      let siblings = [] as FamilyMember[];
+      exFamilies.forEach((exFamily) => siblings.push(...exFamily.children));
+      newExChild.siblings = [...newExChild.siblings, ...siblings];
+      exFamilies.forEach((exFamily) =>
+        exFamily.children.forEach((children) =>
+          children.siblings.push(newExChild)
+        )
       );
     }
-    memberId++;
-    familyMember.exChildren.push(newExChild);
+    exFamilies[mother].children.push(newExChild);
+    familyMember.exFamilies = exFamilies.map((exFamily, index) => ({
+      ...exFamily,
+      partner: {
+        ...exFamily.partner,
+        id: `${familyMember.id}-expartner-${index}`,
+      },
+    }));
 
+    memberId++;
     refresh();
   }
   function addPartner(familyMember: FamilyMember) {
@@ -92,28 +112,33 @@ export function useFamilyMember() {
     const exPartner = createFamilyMember(
       memberId,
       true,
-      `${familyMember.id}-expartner`
+      `${familyMember.id}-expartner-${familyMember.exFamilies.length}`
     );
-    familyMember.exPartner = exPartner;
+
     exPartner.partner = familyMember;
-    if (hasParents(familyMember)) {
-      addChildExPartnerToParents(familyMember, exPartner);
-    }
+    familyMember.exFamilies.push({
+      partner: exPartner,
+      children: [],
+    });
     refresh();
   }
   function deleteMember(familyMember: FamilyMember) {
     const baseParent = getBaseParent();
     if (baseParent.id !== familyMember.id) {
       if (hasParents(familyMember)) {
-        familyMember.parents.forEach((parent) => {
-          parent.children = parent.children.filter(
+        familyMember.parents[0].children =
+          familyMember.parents[0].children.filter(
             (child) => child.id !== familyMember.id
           );
-          parent.exChildren = parent.exChildren.filter(
-            (exChild) => exChild.id !== familyMember.id
-          );
+        familyMember.parents[0].exFamilies.forEach((exFamily) => {
+          if (exFamily.partner.id === familyMember.parents[1].id) {
+            exFamily.children = exFamily.children.filter(
+              (child) => child.id !== familyMember.id
+            );
+          }
         });
       }
+
       if (hasSiblings(familyMember)) {
         familyMember.siblings.forEach(
           (sibling) =>
@@ -124,41 +149,47 @@ export function useFamilyMember() {
       }
       if (hasChildren(familyMember)) {
         familyMember.children = [];
-        familyMember.children.forEach(
-          (children) => (children.parents = [null, null])
-        );
       }
       if (hasExChildren(familyMember)) {
-        familyMember.exChildren = [];
-        familyMember.exChildren.forEach(
-          (exChildren) => (exChildren.parents = [null, null])
-        );
+        familyMember.exFamilies = [];
       }
       if (hasPartner(familyMember)) {
         familyMember.partner = null;
+      }
+      if (familyMember.parents[0].id === baseParent.id) {
+        baseParent.children = baseParent.children.filter(
+          (child) => child.id !== familyMember.id
+        );
+        baseFamilyMember.exFamilies = baseFamilyMember.exFamilies.map(
+          (exFamily) => ({
+            ...exFamily,
+            children: exFamily.children.filter(
+              (child) => child.id !== familyMember.id
+            ),
+          })
+        );
       }
     } else {
       alert("This node cant be deleted");
     }
     refresh();
   }
-  function deleteRelation(familyMember: FamilyMember, from: string) {
-    const baseParent = getBaseParent();
-    if (baseParent.id !== familyMember.id) {
-      if (from === Relations.Partner) {
-        familyMember.partner = null;
-        if (hasChildren(familyMember)) {
-          familyMember.children = [];
-        }
+
+  function deleteRelation(
+    familyMember: FamilyMember,
+    from: string,
+    partnerId: string
+  ) {
+    if (from === Relations.Partner) {
+      familyMember.partner = null;
+      if (hasChildren(familyMember)) {
+        familyMember.children = [];
       }
-      if (from === Relations.ExPartner) {
-        familyMember.exPartner = null;
-        if (hasExChildren(familyMember)) {
-          familyMember.exChildren = [];
-        }
-      }
-    } else {
-      alert("This node cant be deleted");
+    }
+    if (from === Relations.ExPartner) {
+      familyMember.exFamilies = familyMember.exFamilies.filter(
+        (exFamilies) => exFamilies.partner.id !== partnerId
+      );
     }
     refresh();
   }
@@ -172,19 +203,29 @@ export function useFamilyMember() {
     return familyMember.children.length > 0;
   }
   function hasExChildren(familyMember: FamilyMember) {
-    return familyMember.exChildren.length > 0;
+    let hasExChildren = false;
+    familyMember.exFamilies.forEach((exFamily) => {
+      if (exFamily.children.length > 0) hasExChildren = true;
+    });
+    return hasExChildren;
   }
   function hasMoreThanOneChild(familyMember: FamilyMember) {
     return familyMember.children.length > 1;
   }
   function hasMoreThanOneExChild(familyMember: FamilyMember) {
-    return familyMember.exChildren.length > 1;
+    let hasMoreThanOne = false;
+    familyMember.exFamilies.forEach((exFamily) => {
+      if (exFamily.children.length > 1) {
+        hasMoreThanOne = true;
+      }
+    });
+    return hasMoreThanOne;
   }
   function hasPartner(familyMember: FamilyMember) {
     return familyMember.partner != null;
   }
   function hasExPartner(familyMember: FamilyMember) {
-    return familyMember.exPartner != null;
+    return familyMember.exFamilies.length > 0;
   }
   function getPreviousUncle(familyMember: FamilyMember): {
     hasPrevUncle: boolean;
@@ -215,19 +256,7 @@ export function useFamilyMember() {
         ))
     );
   }
-  function addChildExPartnerToParents(
-    familyMember: FamilyMember,
-    exPartner: FamilyMember
-  ) {
-    familyMember.parents.forEach(
-      (parent: FamilyMember) =>
-        (parent.children = parent.children.map((child) =>
-          child.id === familyMember.id
-            ? { ...child, exPartner: exPartner }
-            : child
-        ))
-    );
-  }
+
   // Tiene un bug
   function setSibling(familyMember: FamilyMember, sibling: FamilyMember) {
     sibling.parents = familyMember.parents;
@@ -255,8 +284,16 @@ export function useFamilyMember() {
   function isExChild(familyMember: FamilyMember) {
     if (hasParents(familyMember)) {
       const { parents } = familyMember;
-      const { exChildren } = parents[0];
-      return exChildren.some((child) => child.id === familyMember.id);
+      const { exFamilies } = parents[0];
+      let isExChild = false;
+      exFamilies.forEach((family) =>
+        family.children.forEach((child) => {
+          if (child.id === familyMember.id) {
+            isExChild = true;
+          }
+        })
+      );
+      return isExChild;
     }
     return false;
   }
@@ -264,7 +301,9 @@ export function useFamilyMember() {
     if (!hasParents(familyMember)) {
       return false;
     }
-    return familyMember.id === familyMember.parents[0].exChildren[0].id;
+    return (
+      familyMember.id === familyMember.parents[0].exFamilies[0].children[0].id
+    );
   }
   function setGender(familyMember: FamilyMember, partner: FamilyMember) {
     const partnerGender =
@@ -288,8 +327,8 @@ export function useFamilyMember() {
       );
     }
     if (hasExChildren(familyMember)) {
-      familyMember.exChildren.forEach(
-        (exChild) => (exChild.parents[0].gender = gender)
+      familyMember.exFamilies.forEach((exFamily) =>
+        exFamily.children.forEach((child) => (child.parents[0].gender = gender))
       );
     }
     refresh();
@@ -330,7 +369,10 @@ export function useFamilyMember() {
     prevSibling: FamilyMember;
   } {
     if (hasParents(familyMember)) {
-      const { exChildren } = familyMember.parents[0];
+      const { exFamilies } = familyMember.parents[0];
+      const exChildren = exFamilies.find(
+        (exFamily) => exFamily.partner.id === familyMember.parents[1].id
+      ).children;
       const previousSiblingIndex =
         exChildren.map((child) => child.id).indexOf(familyMember.id) - 1;
       if (previousSiblingIndex >= 0) {
@@ -345,55 +387,70 @@ export function useFamilyMember() {
   function changeRelationType(
     familyMember: FamilyMember,
     actualRelation: Relations,
-    newRelation: Relations
+    newRelation: Relations,
+    mother?: number
   ) {
     if (
       actualRelation === Relations.Partner &&
       newRelation === Relations.ExPartner
     ) {
-      const { partner: newExPartner, exPartner: previousExPartner } =
-        familyMember;
+      const { partner: newExPartner } = familyMember;
       newExPartner.children = familyMember.children;
-      previousExPartner.children = familyMember.exChildren;
-      familyMember.children = previousExPartner.children;
-      familyMember.exChildren = newExPartner.children;
-      if (hasExPartner(familyMember)) {
-        setPartner(familyMember, previousExPartner);
-      } else {
-        familyMember.partner = null;
-      }
-      setExPartner(familyMember, newExPartner);
+      familyMember.partner = null;
+      familyMember.children = [];
+      familyMember.exFamilies.push({
+        partner: newExPartner,
+        children: newExPartner.children,
+      });
+      newExPartner.id = `${familyMember.id}-expartner`;
     }
     if (
       actualRelation === Relations.ExPartner &&
       newRelation === Relations.Partner
     ) {
-      const { exPartner: newPartner, partner: newExPartner } = familyMember;
-      if (hasPartner(familyMember)) {
-        setExPartner(familyMember, newExPartner);
+      const newPartner = familyMember.exFamilies[mother].partner;
+      if (!hasPartner(familyMember)) {
+        newPartner.children = familyMember.exFamilies[mother].children;
+        familyMember.exFamilies = familyMember.exFamilies.filter(
+          (exFamily) => exFamily.partner.id !== newPartner.id
+        );
+        familyMember.exFamilies = familyMember.exFamilies.filter(
+          (exFamily) => exFamily.partner.id !== newPartner.id
+        );
+        familyMember.partner = newPartner;
+        familyMember.children = newPartner.children;
+        newPartner.id = `${familyMember.id}-partner`;
       } else {
-        familyMember.exPartner = null;
+        alert("this member already has a partner");
       }
-      newPartner.children = familyMember.exChildren;
-      newExPartner.children = familyMember.children;
-      familyMember.exChildren = newExPartner.children;
-      familyMember.children = newPartner.children;
-      setPartner(familyMember, newPartner);
     }
     refresh();
   }
-  function setPartner(familyMember: FamilyMember, partner: FamilyMember) {
-    familyMember.partner = partner;
-    partner.partner = familyMember;
-    partner.id = `${familyMember.id}-partner`;
-  }
-  function setExPartner(familyMember: FamilyMember, exPartner: FamilyMember) {
-    familyMember.exPartner = exPartner;
-    exPartner.exPartner = familyMember;
-    exPartner.id = `${familyMember.id}-expartner`;
+  function setAge(familyMember: FamilyMember, age: number) {
+    familyMember.age = age;
+    if (hasParents(familyMember)) {
+      const { parents } = familyMember;
+      if (isExChild(familyMember)) {
+        const { exFamilies } = parents[0];
+        parents[0].exFamilies = exFamilies.map((exFamily) => ({
+          ...exFamily,
+          children: exFamily.children.map((child) =>
+            child.id === familyMember.id ? { ...child, age } : child
+          ),
+        }));
+      }
+      if (isChild(familyMember)) {
+        const { children } = parents[0];
+        parents[0].children = children.map((child) =>
+          child.id === familyMember.id ? { ...child, age } : child
+        );
+      }
+    }
+    refresh();
   }
   function getBaseParent() {
     let currentFamilyMember = familyMember;
+
     let stop = false;
     do {
       if (hasParents(currentFamilyMember)) {
@@ -430,6 +487,7 @@ export function useFamilyMember() {
     isFirstExChild,
     isHeadFamilyMember,
     changeGender,
+    setAge,
     changeRelationType,
     getPreviousSibling,
     getPreviousExSibling,
@@ -448,11 +506,11 @@ function createFamilyMember(
   return {
     parents: [null, null],
     partner: null,
-    exPartner: null,
     children: [],
-    exChildren: [],
+    exFamilies: [],
     siblings: [],
     gender: Gender.Female,
+    age: 0,
     id: !partner ? id.toString() : partnerId,
   };
 }

@@ -15,6 +15,7 @@ const ProfileCard = ({ data }) => {
     addExPartner,
     changeGender,
     deleteMember,
+    setAge,
   } = useFamilyMember();
   const handleAddSibling = () => {
     addSibling(familyMember);
@@ -30,6 +31,9 @@ const ProfileCard = ({ data }) => {
   const handleChangeGender = (gender: Gender) => {
     changeGender(familyMember, gender);
   };
+  const handleSetAge = (age: number) => {
+    setAge(familyMember, age);
+  };
   const handleAddExPartner = () => {
     addExPartner(familyMember);
   };
@@ -39,6 +43,7 @@ const ProfileCard = ({ data }) => {
   return (
     <div className="container">
       <ProfileInformation
+        setAge={handleSetAge}
         changeGender={handleChangeGender}
         initialGender={gender}
       />
@@ -50,7 +55,6 @@ const ProfileCard = ({ data }) => {
         deleteNode={handleDeleteNode}
         hasParents={data.haveParents}
         hasPartner={data.havePartner}
-        hasExPartner={data.haveExPartner}
       />
     </div>
   );
