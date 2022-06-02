@@ -8,7 +8,6 @@ const ProfileButtons = ({
   hasParents,
   addPartner,
   hasPartner,
-  hasExPartner,
   addSibling,
   addExPartner,
   deleteNode,
@@ -30,13 +29,12 @@ const ProfileButtons = ({
         {viewAddMenu ? (
           <div
             className="add-menu rigth"
+            onClick={() => setViewAddMenu(false)}
             onMouseLeave={() => setViewAddMenu(false)}
           >
             <button onClick={addSibling}>Add sibling</button>
             {!hasPartner && <button onClick={addPartner}>Add partner</button>}
-            {!hasExPartner && (
-              <button onClick={addExPartner}>Add ex partner</button>
-            )}
+            <button onClick={addExPartner}>Add ex partner</button>
           </div>
         ) : (
           <div className="button rigth" onClick={() => setViewAddMenu(true)}>

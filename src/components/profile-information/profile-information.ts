@@ -4,7 +4,8 @@ export interface ProfileInformationForm {
   firstname: string;
   lastname: string;
   dateOfBirth: string;
-  dateOfDeath: string | undefined;
-  gender: Gender;
+  dateOfDeath: string | null;
+  gender: Gender | null;
   deceased: boolean;
+  age: number | null;
 }

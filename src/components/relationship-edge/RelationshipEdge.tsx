@@ -37,21 +37,40 @@ const RelationshipEdge = ({
   const [isMenuOpen, setMenuOpen] = useState(false);
   const { addChild, addExChild, changeRelationType, isFemale } =
     useFamilyMember();
-  const splittedId = id.split("-");
   const relationFormX = isFemale(data)
     ? targetX + relationFormOffset / 2
     : sourceX + relationFormOffset / 2;
-  const from = splittedId[splittedId.length - 1];
+  const idClean = id.replace(/-*[0-9]-*/gm, " ").split(" ");
+  var from = "";
+  idClean.forEach((text) => {
+    if (text !== "") {
+      from = text;
+    }
+  });
   const handleClick = () => {
     if (from === Relations.Partner) {
       addChild(data);
     }
     if (from === Relations.ExPartner) {
-      addExChild(data);
+      var edgeId = id.replace(/\D/gm, "-").split("-");
+      var mother = 0;
+      edgeId.forEach((id) => {
+        if (id !== "") {
+          mother = Number(id);
+        }
+      });
+      addExChild(data, mother);
     }
   };
   const handleRelationChange = (relation: Relations) => {
-    changeRelationType(data, from, relation);
+    var edgeId = id.replace(/\D/gm, "-").split("-");
+    var mother = 0;
+    edgeId.forEach((id) => {
+      if (id !== "") {
+        mother = Number(id);
+      }
+    });
+    changeRelationType(data, from, relation, mother);
     setMenuOpen(false);
   };
   return (

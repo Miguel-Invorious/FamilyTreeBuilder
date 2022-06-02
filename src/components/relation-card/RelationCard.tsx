@@ -10,23 +10,22 @@ const RelationCard = ({ data, id }) => {
   const { deleteRelation } = useFamilyMember();
   const { familyMember } = data;
   const handleDelete = () => {
-    const splitId = id.split("-");
-    const from = splitId[splitId.length - 1];
-    deleteRelation(familyMember, from);
+    const from = id.replace(/-*[0-9]-*/gm, "");
+    deleteRelation(familyMember, from, id);
     if (from === Relations.Partner) {
       data.hasPartner = false;
-    }
-    if (from === Relations.ExPartner) {
-      data.hasExPartner = false;
     }
   };
   const [open, setOpen] = useState(false);
   const handleClose = () => {
     setOpen(false);
   };
+  
   return (
     <div className="container">
-      <ProfileInformation profileData={data} />
+      <ProfileInformation
+        profileData={data}
+      />
       <div className="button bottom" onClick={() => setOpen(true)}>
         <FontAwesomeIcon icon={faX} />
       </div>

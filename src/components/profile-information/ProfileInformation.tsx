@@ -5,9 +5,9 @@ import PhotoSelector from "../photo-selector/PhotoSelector";
 import { Gender } from "../../types/gender.ts";
 import { ProfileInformationForm } from "./profile-information";
 import { HandleNames } from "../../types/handle-names.ts";
-
 import "./ProfileInformation.scss";
-const ProfileInformation = ({ changeGender }) => {
+
+const ProfileInformation = ({ changeGender, setAge }) => {
   const formRef = useRef(null);
   const [formMenu, setFormMenu] = useState(false);
   const [isDeceased, setDeceased] = useState(false);
@@ -15,20 +15,36 @@ const ProfileInformation = ({ changeGender }) => {
     firstname: "",
     lastname: "",
     dateOfBirth: "",
-    dateOfDeath: undefined,
     deceased: false,
-    gender: undefined,
+    dateOfDeath: null,
+    gender: null,
+    age: null,
   });
   const {
     handleSubmit,
     register,
     formState: { errors },
   } = useForm<ProfileInformationForm>();
-  const onSubmit = (data) => {
+  const onSubmit = (data: ProfileInformationForm) => {
+    const { dateOfBirth } = data;
     setFormMenu(false);
     setInformation(data);
     if (changeGender) {
       changeGender(data.gender);
+    }
+    if (setAge) {
+      if (dateOfBirth) {
+        const [year, month, day] = dateOfBirth.split("-");
+        const birthDate = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day) - 1
+        );
+        const today = new Date();
+        const age =
+          Math.floor(today.getTime() - birthDate.getTime()) / 31557600000;
+        setAge(age);
+      }
     }
   };
   useEffect(() => {
