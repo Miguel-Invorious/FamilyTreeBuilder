@@ -34,11 +34,10 @@ export function useGetNodesAndEdges() {
 
   const [currentNodes, setCurrentNodes] = useState<Node[]>([]);
   const [currentEdges, setCurrentEdges] = useState<Edge[]>([]);
-
+  const baseFamilyMember = getBaseParent();
   useEffect(() => {
     const nodes = [] as Node[];
     const edges = [] as Edge[];
-    const baseFamilyMember = getBaseParent();
     render(baseFamilyMember);
     function render(familyMember: FamilyMember) {
       if (hasChildren(familyMember)) {
@@ -115,10 +114,12 @@ export function useGetNodesAndEdges() {
           if (isFirstExChild(familyMember)) {
             const parent = familyMember.parents[0];
             if (hasChildren(parent)) {
-              const { children, partner } = parent;
-              console.log(children, partner);
+              const { children } = parent;
               const { position: firstSiblingPosition } = getFamilyMemberNode(
                 children[0]
+              );
+              const { position: lastSiblingPosition } = getFamilyMemberNode(
+                children[children.length - 1]
               );
               baseNodeY = firstSiblingPosition.y;
               if (isFemale(parent)) {
@@ -127,7 +128,7 @@ export function useGetNodesAndEdges() {
                   baseNodeX -= 1.5 * widthGap;
                 }
               } else {
-                baseNodeX = firstSiblingPosition.x + widthGap;
+                baseNodeX = lastSiblingPosition.x + widthGap;
               }
             } else {
               const { hasPrevUncle, prevUncle } =
@@ -136,25 +137,22 @@ export function useGetNodesAndEdges() {
                 const { position: prevUnclePosition } =
                   getFamilyMemberNode(prevUncle);
                 baseNodeY = prevUnclePosition.y + heightGap;
-                if (isFemale(familyMember.parents[0])) {
+                if (isFemale(parent)) {
                   baseNodeX = prevUnclePosition.x + 2 * widthGap;
                 } else {
                   baseNodeX = prevUnclePosition.x + 3 * widthGap;
                 }
               }
-            }
-            if (!hasChildren(familyMember.parents[0])) {
-              if (hasExChildren(familyMember.parents[0])) {
+              if (hasExChildren(parent)) {
                 let gap = 0;
-                familyMember.parents[0].exFamilies.forEach(
+                parent.exFamilies.forEach(
                   (exFamily) => (gap += exFamily.children.length)
                 );
 
                 baseNodeX += gap * widthGap;
               } else {
-                if (hasExPartner(familyMember.parents[0])) {
-                  baseNodeX +=
-                    widthGap * familyMember.parents[0].exFamilies.length;
+                if (hasExPartner(parent)) {
+                  baseNodeX += widthGap * parent.exFamilies.length;
                 }
               }
             }
@@ -167,6 +165,10 @@ export function useGetNodesAndEdges() {
       } else {
         if (hasExChildren(familyMember) && !hasChildren(familyMember)) {
           const { exFamilies } = familyMember;
+          exFamilies.sort(
+            (exFamily1, exFamily2) =>
+              exFamily2.children.length - exFamily1.children.length
+          );
           const { position } = getFamilyMemberNode(exFamilies[0].children[0]);
           baseNodeY = position.y - heightGap;
           baseNodeX = position.x - widthGap / 2;
@@ -268,6 +270,14 @@ export function useGetNodesAndEdges() {
                   baseNodeX += widthGap * familyMember.exFamilies.length;
                 }
               }
+              const parent = familyMember.parents[0];
+              if (hasExChildren(parent) && isFemale(parent)) {
+                let gap = 0;
+                parent.exFamilies.forEach(
+                  (exFamily) => (gap += exFamily.children.length)
+                );
+                baseNodeX += gap * widthGap;
+              }
             } else {
               const { hasPrevSibling, prevSibling } =
                 getPreviousSibling(familyMember);
@@ -349,6 +359,34 @@ export function useGetNodesAndEdges() {
                 }
               }
             }
+          }
+        }
+        if (isExChild(familyMember)) {
+          if (isFirstExChild(familyMember)) {
+            const parent = familyMember.parents[0];
+            if (hasChildren(parent)) {
+              const { children } = parent;
+              const firstChild = children[0];
+              const lastChild = children[children.length - 1];
+              if (isFemale(parent)) {
+                const { position } = getFamilyMemberNode(firstChild);
+                baseNodeY = position.y;
+                baseNodeX = position.x - 1.5 * widthGap;
+              } else {
+                const { position } = getFamilyMemberNode(lastChild);
+                baseNodeY = position.y;
+                baseNodeX = position.x + 1.5 * widthGap;
+              }
+            }
+            if (!isFemale(familyMember)) {
+              baseNodeX -= 0.5 * widthGap;
+            } else {
+              baseNodeX += 0.5 * widthGap;
+            }
+          } else {
+            let { x, y } = getExChildPosition(familyMember);
+            baseNodeX = x;
+            baseNodeY = y;
           }
         }
       }
@@ -632,12 +670,21 @@ export function useGetNodesAndEdges() {
               x = prevUnclePosition.x + 1.5 * widthGap;
             }
           }
-          if (hasMoreThanOneExChild(familyMember.parents[0])) {
-            x +=
-              widthGap *
-              familyMember.parents[0].exFamilies[
-                familyMember.parents[0].exFamilies.length - 1
-              ].children.length;
+          if (isFemale(familyMember.parents[0])) {
+            const parent = familyMember.parents[0];
+            if (hasMoreThanOneExChild(parent)) {
+              let childGap = 0;
+              const { exFamilies } = parent;
+              exFamilies.forEach(
+                (family) => (childGap += family.children.length)
+              );
+              x += widthGap * childGap;
+            } else {
+              if (hasExPartner(parent)) {
+                const { exFamilies } = parent;
+                x += exFamilies.length * widthGap;
+              }
+            }
           }
         } else {
           const parent = familyMember.parents[0];
@@ -650,27 +697,20 @@ export function useGetNodesAndEdges() {
                 x = prevUnclePosition.x + 3 * widthGap;
               }
             }
-          } else {
-            x = prevUnclePosition.x + 2.5 * widthGap;
-          }
-          if (hasExChildren(parent)) {
-            let exChilds = 0;
-            parent.exFamilies.forEach(
-              (exFamily) => (exChilds += exFamily.children.length)
-            );
-            if (isFemale(parent)) {
+            if (hasExChildren(parent)) {
+              let exChilds = 0;
+              parent.exFamilies.forEach(
+                (exFamily) => (exChilds += exFamily.children.length)
+              );
+
               x += exChilds * widthGap;
             } else {
-              x -= exChilds * widthGap;
-            }
-          } else {
-            if (hasExPartner(parent)) {
-              if (isFemale(parent)) {
+              if (hasExPartner(parent)) {
                 x += parent.exFamilies.length * widthGap;
-              } else {
-                x -= parent.exFamilies.length * widthGap;
               }
             }
+          } else {
+            x = prevUnclePosition.x + 1.5 * widthGap;
           }
         }
       } else {
@@ -782,9 +822,9 @@ export function useGetNodesAndEdges() {
             x = prevNephewPosition.x - 1.5 * widthGap;
           } else {
             if (isFemale(prevSibling)) {
-              x = prevSiblingPosition.x - 1.5 * widthGap;
-            } else {
               x = prevSiblingPosition.x - 2.5 * widthGap;
+            } else {
+              x = prevSiblingPosition.x - widthGap;
             }
           }
         } else {
@@ -805,7 +845,7 @@ export function useGetNodesAndEdges() {
 
         const previousSibling =
           previousFamily.children[previousFamily.children.length - 1];
-        if (prevSibling) {
+        if (previousSibling) {
           const { position: siblingPosition } =
             getFamilyMemberNode(previousSibling);
           y = siblingPosition.y;

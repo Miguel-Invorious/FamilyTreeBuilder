@@ -68,7 +68,6 @@ export function useFamilyMember() {
   function addExChild(familyMember: FamilyMember, mother: number) {
     const newExChild = createFamilyMember(memberId);
     const { children, exFamilies } = familyMember;
-    console.log(mother);
     newExChild.parents = [familyMember, exFamilies[mother].partner];
     if (hasChildren(familyMember)) {
       newExChild.siblings = [...newExChild.siblings, ...children];
@@ -161,14 +160,12 @@ export function useFamilyMember() {
         baseParent.children = baseParent.children.filter(
           (child) => child.id !== familyMember.id
         );
-        baseFamilyMember.exFamilies = baseFamilyMember.exFamilies.map(
-          (exFamily) => ({
-            ...exFamily,
-            children: exFamily.children.filter(
-              (child) => child.id !== familyMember.id
-            ),
-          })
-        );
+        baseParent.exFamilies = baseParent.exFamilies.map((exFamily) => ({
+          ...exFamily,
+          children: exFamily.children.filter(
+            (child) => child.id !== familyMember.id
+          ),
+        }));
       }
     } else {
       alert("This node cant be deleted");
@@ -394,6 +391,7 @@ export function useFamilyMember() {
     newRelation: Relations,
     mother?: number
   ) {
+    const baseParent = getBaseParent();
     if (
       actualRelation === Relations.Partner &&
       newRelation === Relations.ExPartner
@@ -402,12 +400,23 @@ export function useFamilyMember() {
       newExPartner.children = familyMember.children;
       familyMember.partner = null;
       familyMember.children = [];
+      newExPartner.children = newExPartner.children.map((child) => ({
+        ...child,
+        parents: [familyMember, newExPartner],
+      }));
       newExPartner.id = `${familyMember.id}-expartner-${familyMember.exFamilies.length}`;
       familyMember.exFamilies.push({
         partner: newExPartner,
         children: newExPartner.children,
       });
+      if (familyMember.id === baseParent.id) {
+        baseParent.partner = null;
+        baseParent.children = [];
+        baseParent.exFamilies = familyMember.exFamilies;
+        setFamilyMember({ ...baseParent });
+      }
     }
+
     if (
       actualRelation === Relations.ExPartner &&
       newRelation === Relations.Partner
