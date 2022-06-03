@@ -68,6 +68,7 @@ export function useFamilyMember() {
   function addExChild(familyMember: FamilyMember, mother: number) {
     const newExChild = createFamilyMember(memberId);
     const { children, exFamilies } = familyMember;
+    console.log(mother);
     newExChild.parents = [familyMember, exFamilies[mother].partner];
     if (hasChildren(familyMember)) {
       newExChild.siblings = [...newExChild.siblings, ...children];
@@ -301,9 +302,12 @@ export function useFamilyMember() {
     if (!hasParents(familyMember)) {
       return false;
     }
-    return (
-      familyMember.id === familyMember.parents[0].exFamilies[0].children[0].id
-    );
+    if (familyMember.parents[0].exFamilies[0].children[0]) {
+      return (
+        familyMember.id === familyMember.parents[0].exFamilies[0].children[0].id
+      );
+    }
+    return false;
   }
   function setGender(familyMember: FamilyMember, partner: FamilyMember) {
     const partnerGender =
@@ -398,11 +402,11 @@ export function useFamilyMember() {
       newExPartner.children = familyMember.children;
       familyMember.partner = null;
       familyMember.children = [];
+      newExPartner.id = `${familyMember.id}-expartner-${familyMember.exFamilies.length}`;
       familyMember.exFamilies.push({
         partner: newExPartner,
         children: newExPartner.children,
       });
-      newExPartner.id = `${familyMember.id}-expartner`;
     }
     if (
       actualRelation === Relations.ExPartner &&

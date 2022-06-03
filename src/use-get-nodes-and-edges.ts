@@ -115,7 +115,8 @@ export function useGetNodesAndEdges() {
           if (isFirstExChild(familyMember)) {
             const parent = familyMember.parents[0];
             if (hasChildren(parent)) {
-              const { children } = parent;
+              const { children, partner } = parent;
+              console.log(children, partner);
               const { position: firstSiblingPosition } = getFamilyMemberNode(
                 children[0]
               );
@@ -761,12 +762,6 @@ export function useGetNodesAndEdges() {
           x = prevSiblingPosition.x + widthGap;
         }
       }
-      // if (hasExPartner(parent)) {
-      //   if (isFemale(parent)) {
-      //     x += widthGap * parent.exFamilies.length;
-      //   } else {
-      //   }
-      // }
       return { x, y };
     }
     function getExChildPosition(familyMember: FamilyMember): Position {
@@ -810,13 +805,15 @@ export function useGetNodesAndEdges() {
 
         const previousSibling =
           previousFamily.children[previousFamily.children.length - 1];
-        const { position: siblingPosition } =
-          getFamilyMemberNode(previousSibling);
-        y = siblingPosition.y;
-        if (isFemale(familyMember.parents[0])) {
-          x = siblingPosition.x - widthGap;
-        } else {
-          x = siblingPosition.x + widthGap;
+        if (prevSibling) {
+          const { position: siblingPosition } =
+            getFamilyMemberNode(previousSibling);
+          y = siblingPosition.y;
+          if (isFemale(familyMember.parents[0])) {
+            x = siblingPosition.x - widthGap;
+          } else {
+            x = siblingPosition.x + widthGap;
+          }
         }
       }
 
